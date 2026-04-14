@@ -1,6 +1,7 @@
 import math
 from objects.atom import Atom
 from cmu_graphics import *
+import keyboard
 
         
         
@@ -156,7 +157,7 @@ def main():
 
 
 
-    
+main()
 
     
 
