@@ -2,25 +2,38 @@ import math
 from objects.atom import Atom
 from cmu_graphics import *
 import keyboard
+import json
+        
+import os
 
-        
-        
+
      
 def onAppStart(app):
     initAppStates(app)
+    initConfigVariables(app)
     app.atoms = []
+    app.angle = None
+
+
+def initConfigVariables(app): 
+    with open("config.json") as f:
+        setting = json.load(f) 
+    app.width = setting["width"]
+    app.height = setting["height"]
+    app.bondGap = setting["bondGap"] #this variable controls how much space there is between atom and bond
+    app.defaultBondLength = setting["defaultBondLength"]
+    app.uniqueAngles = setting["uniqueAngles"]
+
+
+def initAppStates(app):
+    app.tempAtomPos = None  #when dragging to make new atom, stores the new positions to place the new atom. 
+                             # when not dragging, will be None, and its truthiness flags for ifDragging
+    app.bondOrder = 1 
     app.currElement = 'C'
     app.selectedAtom = None
-    app.width = 400
-    app.height = 400
-    #getBonds(app)
-    
-def initAppStates(app):
-    app.draggingNew = None
-    app.moveAtomsMode = False
-    app.originalPressPos = None
-    app.bondGap = 10 #this variable controls how much space there is between atom and bond
-    app.bondOrder = 1
+    app.moveAtomsMode = False  #when True, dragging atoms will move them. When false, dragging on atoms makes new bonds
+    app.originalPressPos = None  #this variable is used to prevent the creation of new atoms by dragging, which felt wrong to me
+
 
 def getBonds(app):
     bonds = set()
@@ -36,7 +49,11 @@ def addAtom(app, x, y):
     app.atoms.append(newAtom)
     return newAtom
     
-
+def onStep(app):
+    app.moveAtomsMode = keyboard.is_pressed('shift') 
+    #moveAtomsMode means that dragging atoms will move them and not make new atoms.                                                 
+    #It was done using onStep and with foreign module because of cmu_graphics inability
+    #to proccess shift presses, and how good using shift for ths functon felt
 
 def onKeyPress(app, key):
     if key.upper() in Atom.valencyDict:
@@ -46,7 +63,7 @@ def onKeyPress(app, key):
         
 
 def onMouseMove(app, x, y):
-    if not app.draggingNew:
+    if not app.tempAtomPos:
         app.selectedAtom = isWithinAtom(app, x, y)
 
 def onMousePress(app, x, y):
@@ -59,6 +76,7 @@ def onKeyHold(app, keys, modifers):
 def onKeyRelease(app, key, modifers):
     if  'shift' in modifers:
         app.moveAtomsMode = False
+
         
     
 def onMouseDrag(app, x, y):
@@ -66,13 +84,24 @@ def onMouseDrag(app, x, y):
         if app.moveAtomsMode:
             app.selectedAtom.pos = (x,y)
         else:
-            app.draggingNew = (x, y)
+            app.tempAtomPos = makePointDiscreteAngle(app, x, y)
+
+def makePointDiscreteAngle(app, x1, y1):
+    x0, y0 = app.selectedAtom.pos
+    dx = x1 - x0
+    dy = y1 - y0
+    angle = (app.uniqueAngles*math.atan2(dx, dy))//(2*math.pi)
+    angle *= (2*math.pi)/app.uniqueAngles
+    x, y= 50*math.sin(angle), 50*math.cos(angle)
+    return (x + x0, y + y0)
+    
+
     
 def onMouseRelease(app, x, y):
-    if app.draggingNew and app.selectedAtom:
+    if app.tempAtomPos and app.selectedAtom:
         atom1 = isWithinAtom(app, x, y)
         if not atom1:
-            atom1 = addAtom(app, *app.draggingNew)
+            atom1 = addAtom(app, *app.tempAtomPos)
         app.selectedAtom.addBond(atom1, order= app.bondOrder)
 
     elif not isWithinAtom(app, x, y):
@@ -80,7 +109,7 @@ def onMouseRelease(app, x, y):
             addAtom(app, x, y)
             
     #------------- reseting vars
-    app.draggingNew = None
+    app.tempAtomPos = None 
     app.originalPressPos = None
     
     
@@ -145,8 +174,8 @@ def getDoubleBondOffsetPoints(angle, pos, offset):
     
         
 def drawTempBond(app):
-    if app.draggingNew and app.selectedAtom in app.atoms:
-        drawBond(app, app.selectedAtom.pos, app.draggingNew)
+    if app.tempAtomPos and app.selectedAtom in app.atoms:
+        drawBond(app, app.selectedAtom.pos, app.tempAtomPos, app.bondOrder)
     
 def drawStatus(app):
     drawLabel(f'Current Atom: {app.currElement}',app.width/2, 20, size = 20)
