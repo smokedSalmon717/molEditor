@@ -1,6 +1,6 @@
 {
-    "width": 400,
-    "height": 400,
+    "width": 800,
+    "height": 800,
     "bondGap": 10,
     "uniqueAngles": 12,
     "defaultBondLength": 75

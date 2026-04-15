@@ -28,6 +28,7 @@ def initAppStates(app):
     app.tempAtomPos = None  #when dragging to make new atom, stores the new positions to place the new atom. 
                              # when not dragging, will be None, and its truthiness flags for ifDragging
     app.bondOrder = 1 
+    app.stepCounterForDoubleClick = None
     app.currElement = 'C'
     app.selectedAtom = None
     app.moveAtomsMode = False  #when True, dragging atoms will move them. When false, dragging on atoms makes new bonds
@@ -54,13 +55,7 @@ def onStep(app):
     #moveAtomsMode means that dragging atoms will move them and not make new atoms.                                                 
     #It was done using onStep and with foreign module because of cmu_graphics inability
     #to proccess shift presses, and how good using shift for ths functon felt
-    if app.stepCounterForDoubleClick != None: 
-        doubleClickRoutine(app)
 
-def doubleClickRoutine(app):
-    app.stepCounterForDoubleClick -= 1
-    if app.stepCounterForDoubleClick >= 0:
-        app.stepCounterForDoubleClick = None
 
 
     
@@ -78,12 +73,7 @@ def onMouseMove(app, x, y):
 
 def onMousePress(app, x, y):
     app.originalPressPos = (x, y)
-    if app.selectedAtom and not app.tempAtomPos: #this means that we are hovering over atom and not making new bond
-        if app.stepCounterForDoubleClick == None:
-            app.stepCounterForDoubleClick = 10
-            #sets the amount of steps where clicking again will count as double click
-        elif type(app.stepCounterForDoubleClick) == int:
-            app.highlightedAtom = app.selectedAtom
+
 
         
 
