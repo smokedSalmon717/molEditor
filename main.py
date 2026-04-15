@@ -4,7 +4,6 @@ from cmu_graphics import *
 import keyboard
 import json
         
-import os
 
 
      
@@ -33,6 +32,7 @@ def initAppStates(app):
     app.selectedAtom = None
     app.moveAtomsMode = False  #when True, dragging atoms will move them. When false, dragging on atoms makes new bonds
     app.originalPressPos = None  #this variable is used to prevent the creation of new atoms by dragging, which felt wrong to me
+    app.checkingForDoubleClick = None
 
 
 def getBonds(app):
@@ -54,6 +54,16 @@ def onStep(app):
     #moveAtomsMode means that dragging atoms will move them and not make new atoms.                                                 
     #It was done using onStep and with foreign module because of cmu_graphics inability
     #to proccess shift presses, and how good using shift for ths functon felt
+    if app.stepCounterForDoubleClick != None: 
+        doubleClickRoutine(app)
+
+def doubleClickRoutine(app):
+    app.stepCounterForDoubleClick -= 1
+    if app.stepCounterForDoubleClick >= 0:
+        app.stepCounterForDoubleClick = None
+
+
+    
 
 def onKeyPress(app, key):
     if key.upper() in Atom.valencyDict:
@@ -63,11 +73,23 @@ def onKeyPress(app, key):
         
 
 def onMouseMove(app, x, y):
-    if not app.tempAtomPos:
+    if not app.tempAtomPos:  #not currently dragging
         app.selectedAtom = isWithinAtom(app, x, y)
 
 def onMousePress(app, x, y):
     app.originalPressPos = (x, y)
+    if app.selectedAtom and not app.tempAtomPos: #this means that we are hovering over atom and not making new bond
+        if app.stepCounterForDoubleClick == None:
+            app.stepCounterForDoubleClick = 10
+            #sets the amount of steps where clicking again will count as double click
+        elif type(app.stepCounterForDoubleClick) == int:
+            app.highlightedAtom = app.selectedAtom
+
+        
+
+
+
+    
         
 def onKeyHold(app, keys, modifers):  
     #print(keys)
@@ -115,9 +137,16 @@ def onMouseRelease(app, x, y):
     
 def isWithinAtom(app, x, y):
     for atom in app.atoms:
-        dist = distance(*atom.pos, x, y)
-        if dist < 15:
+        if isWithinSpecificAtom(atom, x, y):
             return atom
+
+
+        
+def isWithinSpecificAtom(atom, x, y):
+    dist = distance(*atom.pos, x, y)
+    if dist < 15:
+        return atom
+
    #      
         
         
@@ -135,6 +164,7 @@ def redrawAll(app):
 def drawSelection(app):
     if app.selectedAtom != None:
         drawCircle(*app.selectedAtom.pos, 15, fill='gray', opacity=25)  
+        
 
     
 def drawAtoms(app):
