@@ -1,3 +1,8 @@
+#basic philosphy of this mile file is that if the function is not 
+#one of the ones built into cmu_graphics, do not include it in the file
+#even stuff like drawAtoms is inside a different file is gets called by the
+#drawWhiteboard function
+
 
 from objects.atom import Atom
 from cmu_graphics import *
@@ -5,6 +10,7 @@ import draw
 import utils
 import keyboard
 import json
+import appUtils
         
      
 def onAppStart(app):
@@ -31,11 +37,7 @@ def initAppStates(app):
     app.currElement = 'C'
     app.parentAtom = None
     app.moveAtomsMode = False  #when True, dragging atoms will move them. When false, dragging on atoms makes new bonds
-  
-def addAtom(app, x, y):
-    newAtom = Atom(app.currElement, position=(x,y))
-    app.atoms.append(newAtom)
-    return newAtom
+
     
 def onStep(app):
     app.moveAtomsMode = keyboard.is_pressed('shift') 
@@ -51,7 +53,9 @@ def onKeyPress(app, key):
     if key.upper() in Atom.valencyDict:
         app.currElement = key.upper()
     if key == '=':
-        app.bondOrder = (app.bondOrder) % 3 + 1        
+        app.bondOrder = (app.bondOrder) % 3 + 1  
+    if key == 'backspace':
+        appUtils.deleteSelectedAtoms(app)      
 
 def onMouseMove(app, x, y):
     if not app.tempAtomPos:  #not currently dragging
@@ -61,7 +65,7 @@ def onMousePress(app, x, y):
     atomPressed = isWithinAtom(app, x, y)
     if not atomPressed:
             if app.selectedAtomList == []: #dont add atom if your doing box selection
-                addAtom(app, x, y)
+                appUtils.addAtom(app, x, y)
             else:
                 app.selectedAtomList = []
     else:
@@ -78,8 +82,8 @@ def onMouseDrag(app, x, y):
         if app.moveAtomsMode:
             if app.parentAtom in app.selectedAtomList:
                 x0, y0 = app.parentAtom.pos
-                dx, dy = x - x0, y - y0
-                utils.moveGroup(app.selectedAtomList, dx, dy)
+                dx, dy = x - x0, y - y0                                                             
+                appUtils.moveGroup(app.selectedAtomList, dx, dy)
             else:
                 app.parentAtom.pos = (x,y)
         else:
@@ -89,7 +93,7 @@ def onMouseRelease(app, x, y):
     if app.tempAtomPos and app.parentAtom:
         atom1 = isWithinAtom(app, x, y)
         if not atom1:
-            atom1 = addAtom(app, *app.tempAtomPos)
+            atom1 = appUtils.addAtom(app, *app.tempAtomPos)
         app.parentAtom.addBond(atom1, order= app.bondOrder)
 
     #------------- reseting vars
