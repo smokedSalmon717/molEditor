@@ -8,10 +8,7 @@ from objects.atom import Atom
 
 
 
-def moveGroup(group, dx, dy):
-    #take in list of atoms as group, and moves them by dx, dy
-    for atom in group:
-        atom.pos = utils.vectorSum(atom.pos, (dx, dy))
+
 
 
 def addObject(app, x, y):
@@ -32,18 +29,10 @@ def addRing(app, x, y, size=6):
     if app.parentAtom: #this case is when adding the ring to an existing structure
         pass
     else:
-        
-
-def deleteSelectedAtoms(app):
-    for atom in app.selectedAtomList:
-        deleteBondReferencesInOtherAtoms(atom)
-        app.atoms.remove(atom) 
-    app.selectedAtomList = [] 
+        pass
 
 
-def deleteBondReferencesInOtherAtoms(self):
-    for partner in self.bonds:
-        partner.bonds.pop(self)
+
 
 
 

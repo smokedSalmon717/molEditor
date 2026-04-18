@@ -9,6 +9,22 @@ def makePointDiscreteAngle(uniqueAngles, x0, y0, x1, y1):
     x, y= 50*math.sin(angle), 50*math.cos(angle)
     return (x + x0, y + y0)
 
+def deleteSelectedAtoms(app):
+    for atom in app.selectedAtomList:
+        deleteBondReferencesInOtherAtoms(atom)
+        app.atoms.remove(atom) 
+    app.selectedAtomList = [] 
+
+
+def deleteBondReferencesInOtherAtoms(self):
+    for partner in self.bonds:
+        partner.bonds.pop(self)
+
+def moveGroup(group, dx, dy):
+    #take in list of atoms as group, and moves them by dx, dy
+    for atom in group:
+        atom.pos = vectorSum(atom.pos, (dx, dy))
+
 #This function is written by AI, documentation made partially by hand
 def point_to_segment_distance(px, py, x1, y1, x2, y2): 
     # Vector AB

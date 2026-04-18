@@ -4,20 +4,27 @@
 #drawWhiteboard function
 
 
-from objects.atom import Atom
+import objects.atom
 from cmu_graphics import *
+import objects.buttons
 import draw
 import utils
 import keyboard
 import json
-import appUtils
+import objectAdder
         
      
 def onAppStart(app):
+    print('started')
     initAppStates(app)
     initConfigVariables(app)
+    makeButtons(app)
     app.atoms = []
     app.angle = None
+
+def makeButtons(app):
+    app.buttons = []
+  
 
 def initConfigVariables(app): 
     with open("config.json") as f:
@@ -31,7 +38,9 @@ def initConfigVariables(app):
 def initAppStates(app):
     app.tempAtomPos = None  #when dragging to make new atom, stores the new positions to place the new atom. 
                              # when not dragging, will be None, and its truthiness flags for ifDragging
-    app.bondOrder = 1 
+    app.currentObject = objectAdder.addAtom
+    app.objectOrder = 1 #if current object mode is atoms, then this means bond order, and if ring, this means ring size
+
     app.selectedAtomList = []
     app.stepCounterForDoubleClick = None
     app.currElement = 'C'
@@ -50,29 +59,30 @@ def onStep(app):
             app.stepCounterForDoubleClick = None
 
 def onKeyPress(app, key):
-    if key.upper() in Atom.valencyDict:
+    if key.upper() in objects.atom.Atom.valencyDict:
         app.currElement = key.upper()
     if key == '=':
-        app.bondOrder = (app.bondOrder) % 3 + 1  
+        app.objectOrder = (app.objectOrder) % 3 + 1  
     if key == 'backspace':
-        appUtils.deleteSelectedAtoms(app)      
+        objectAdder.deleteSelectedAtoms(app)      
 
 def onMouseMove(app, x, y):
     if not app.tempAtomPos:  #not currently dragging
         app.parentAtom = isWithinAtom(app, x, y)
 
 def onMousePress(app, x, y):
-    atomPressed = isWithinAtom(app, x, y)
-    if not atomPressed:
-            if app.selectedAtomList == []: #dont add atom if your doing box selection
-                appUtils.addAtom(app, x, y)
-            else:
-                app.selectedAtomList = []
+    if not app.parentAtom:
+        if app.selectedAtomList == []: #dont add atom if your doing box selection
+            objectAdder.addObject(app, x, y)
+        else:
+            app.selectedAtomList = []
     else:
         if app.stepCounterForDoubleClick != None:
-            app.selectedAtomList.append(atomPressed)
+            app.selectedAtomList.append(app.parentAtom) 
+            #abuse of notation, not literally parent atom, just atom being hovered over
         else:
             app.stepCounterForDoubleClick = 10
+            #Time for double clicks to work. Rn its 0.5 seconds
 
 
 
@@ -83,7 +93,7 @@ def onMouseDrag(app, x, y):
             if app.parentAtom in app.selectedAtomList:
                 x0, y0 = app.parentAtom.pos
                 dx, dy = x - x0, y - y0                                                             
-                appUtils.moveGroup(app.selectedAtomList, dx, dy)
+                objectAdder.moveGroup(app.selectedAtomList, dx, dy)
             else:
                 app.parentAtom.pos = (x,y)
         else:
@@ -91,10 +101,10 @@ def onMouseDrag(app, x, y):
    
 def onMouseRelease(app, x, y):
     if app.tempAtomPos and app.parentAtom:
-        atom1 = isWithinAtom(app, x, y)
-        if not atom1:
-            atom1 = appUtils.addAtom(app, *app.tempAtomPos)
-        app.parentAtom.addBond(atom1, order= app.bondOrder)
+        if not isWithinAtom(app, x, y):
+            objectAdder.addObject(app, x, y)
+            app.parentAtom = None # This is so that the parentAtom is not desynced with position, which can  have weird results
+
 
     #------------- reseting vars
     app.tempAtomPos = None 
@@ -111,6 +121,7 @@ def isWithinSpecificAtom(atom, x, y):
            
 def redrawAll(app):
     draw.drawSketchpad(app)
+    draw.drawButtons(app)
     drawStatus(app)
 
     
@@ -120,7 +131,6 @@ def drawStatus(app):
 
 def main():
     runApp()
-
 
 
 main()

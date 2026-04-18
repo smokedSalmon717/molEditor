@@ -47,7 +47,7 @@ def drawBond(app, pos1, pos2, order=1):
                   
 def drawTempBond(app):
     if app.tempAtomPos and app.parentAtom in app.atoms:
-        drawBond(app, app.parentAtom.pos, app.tempAtomPos, app.bondOrder)
+        drawBond(app, app.parentAtom.pos, app.tempAtomPos, app.objectOrder)
 
 
 def drawSketchpad(app):
@@ -55,3 +55,12 @@ def drawSketchpad(app):
     drawAtoms(app)
     drawBonds(app)
     drawTempBond(app)
+
+
+
+
+def drawButtons(app):
+    for button in app.buttons:
+        color = rgb(150, 150, 150) if button.isActive else rgb(100, 100, 100)
+        x, y, w, h = button.x, button.y, button.w, button.h
+        drawRect(x, y, w, h, fill=color)
