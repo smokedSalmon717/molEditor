@@ -20,10 +20,11 @@ def onAppStart(app):
     initConfigVariables(app)
     makeButtons(app)
     app.atoms = []
-    app.angle = None
+    app.rings = []
 
 def makeButtons(app):
     app.buttons = []
+    #app.buttons.append(objects.buttons.Button(0, 0, 50, 50, '6-ring'))
   
 
 def initConfigVariables(app): 
@@ -38,8 +39,9 @@ def initConfigVariables(app):
 def initAppStates(app):
     app.tempAtomPos = None  #when dragging to make new atom, stores the new positions to place the new atom. 
                              # when not dragging, will be None, and its truthiness flags for ifDragging
-    app.currentObject = objectAdder.addAtom
-    app.objectOrder = 1 #if current object mode is atoms, then this means bond order, and if ring, this means ring size
+    app.currentObject = objectAdder.addRing
+    app.bondOrder = 1
+    app.ringNumber = 6
 
     app.selectedAtomList = []
     app.stepCounterForDoubleClick = None
@@ -62,9 +64,11 @@ def onKeyPress(app, key):
     if key.upper() in objects.atom.Atom.valencyDict:
         app.currElement = key.upper()
     if key == '=':
-        app.objectOrder = (app.objectOrder) % 3 + 1  
+        app.bondOrder = (app.bondOrder) % 3 + 1  
+    if key.isdigit() and 3 <= int(key) <= 8:
+        app.ringNumber = int(key)
     if key == 'backspace':
-        objectAdder.deleteSelectedAtoms(app)      
+        utils.deleteSelectedAtoms(app)      
 
 def onMouseMove(app, x, y):
     if not app.tempAtomPos:  #not currently dragging
@@ -93,7 +97,7 @@ def onMouseDrag(app, x, y):
             if app.parentAtom in app.selectedAtomList:
                 x0, y0 = app.parentAtom.pos
                 dx, dy = x - x0, y - y0                                                             
-                objectAdder.moveGroup(app.selectedAtomList, dx, dy)
+                utils.moveGroup(app.selectedAtomList, dx, dy)
             else:
                 app.parentAtom.pos = (x,y)
         else:
@@ -122,12 +126,11 @@ def isWithinSpecificAtom(atom, x, y):
 def redrawAll(app):
     draw.drawSketchpad(app)
     draw.drawButtons(app)
-    drawStatus(app)
+    #drawStatus(app)
+   
 
-    
 def drawStatus(app):
-    drawLabel(f'Current Atom: {app.currElement}',app.width/2, 20, size = 20)
-    drawLabel(f'{app.selectedAtomList=} {app.stepCounterForDoubleClick=} {app.moveAtomsMode=}', app.width/2, 50, size =10)
+    pass
 
 def main():
     runApp()

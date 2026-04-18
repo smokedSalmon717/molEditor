@@ -2,6 +2,8 @@
 #utils.py is for generic utils, stuff like vector math
 import utils
 from objects.atom import Atom
+from objects.ring import Ring
+import math
 
 
 
@@ -12,24 +14,42 @@ from objects.atom import Atom
 
 
 def addObject(app, x, y):
-    app.currentObject(app, x, y, app.objectOrder)
+    app.currentObject(app, x, y)
 
 
 
-def addAtom(app, x, y, bondOrder = 1):
-    newAtom = Atom(app.currElement, position=(x,y))
-    app.atoms.append(newAtom)
+def addAtom(app , x, y):
     if app.parentAtom:
-        newAtom.addBond(app.parentAtom, bondOrder)
-
-def addBenzene(app, x, y, size): #size not used, just have it cuz of how I switched between which objectType I am adding
-    pass
-
-def addRing(app, x, y, size=6):
-    if app.parentAtom: #this case is when adding the ring to an existing structure
-        pass
+        vector = utils.makeVector(app.parentAtom.pos, (x,y))
+        vector = utils.normalizeVector(*vector, app.defaultBondLength)
+        x, y = utils.vectorSum(vector, app.parentAtom.pos)
+        newAtom = Atom(app.currElement, position=(x,y))
+        newAtom.addBond(app.parentAtom, app.bondOrder)
     else:
-        pass
+        newAtom = Atom(app.currElement, position=(x,y))
+    app.atoms.append(newAtom)
+    return newAtom
+
+def addRing(app, x, y): #size not used, just have it cuz of how I switched between which objectType I am adding
+    n = app.ringNumber
+    if not app.parentAtom:
+        y += utils.polygonRadius(n, app.defaultBondLength) #in parentless case, make sure you generate ring around center
+        vector = (0, -app.defaultBondLength) #with no parent, starting angle is straight up
+    else:
+        vector = utils.makeVector(app.parentAtom.pos, (x,y)) #generates vector from parents to child
+        vector = utils.normalizeVector(*vector, app.defaultBondLength)
+    seed = addAtom(app, x, y)
+    ring = Ring(seed, n, app.defaultBondLength, vector, aromatic = True)
+    addRingToApp(app, ring)
+
+def addRingToApp(app, ring):
+    print(ring.atoms)
+    for atom in ring.atoms:
+        app.atoms.append(atom)
+    
+    
+    
+
 
 
 

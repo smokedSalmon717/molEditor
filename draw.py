@@ -47,7 +47,7 @@ def drawBond(app, pos1, pos2, order=1):
                   
 def drawTempBond(app):
     if app.tempAtomPos and app.parentAtom in app.atoms:
-        drawBond(app, app.parentAtom.pos, app.tempAtomPos, app.objectOrder)
+        drawBond(app, app.parentAtom.pos, app.tempAtomPos, app.bondOrder)
 
 
 def drawSketchpad(app):

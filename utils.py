@@ -64,5 +64,37 @@ def getDoubleBondOffsetPoints(angle, pos, offset):
 def vectorSum(v1, v2):
     return (v1[0] + v2[0], v1[1] + v2[1])
     
+
+def polygonRadius(n, s):
+    return s / (2 * math.sin(math.pi / n))
+
+
+def makeVector(p1, p0):
+    x0, y0 = p0
+    x1, y1 = p1
+    return (x0 - x1, y0 - y1)
+
+
+#written by ChatGPT, though I changed the names to match my conventions
+#I  do understand the math, just didn't feel like figuring out the signs in our sign convention
+def rotateVector(vector, angle):
+    x, y = vector
+    cosT = math.cos(angle)
+    sinT = math.sin(angle)
+
+    xNew = x * cosT + y * sinT
+    yNew = -x * sinT + y * cosT
+
+    return (xNew, yNew)
+
+
+
+
+def normalizeVector(x, y, length):
+    scalar = length / math.hypot(x, y)
+    return scalar * x, scalar * y
+
+
+
     
     

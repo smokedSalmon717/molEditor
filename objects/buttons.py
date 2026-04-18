@@ -3,34 +3,31 @@
 
 #The template button was written by AI (Gemini)
 #But the subclasses are written by me.
-class BaseButton:
-    def __init__(self, x, y, w, h, callback):
+class Button:
+    def __init__(self, x, y, w, h, text, callback, app):
+        self.app = app
         self.rect = (x, y, w, h)
         self.callback = callback # The function to run when clicked
+        self.text = text
+        self.isActive = False
 
     def checkClick(self, mouse_x, mouse_y):
         x, y, w, h = self.rect
         if x <= mouse_x <= x + w and y <= mouse_y <= y + h:
-            self.on_click()
+            self.onClick()
             return True
         return False
         
     def onClick(self):
-        # To be overridden by subclasses
-        pass
+        self.callback(self.app)
+
+    def checkIfActive(self):
+        self.isActive = self.variable == self.output
 
 
-#structure of having the callback as a parameter of 
-#the class which is itself a function came from the
-#AI (Gemini), but the code itself is pretty much me
-class ToggleButton(BaseButton):
-    def __init__(self, x, y, w, h, callback, initialState=False):
-        super().__init__(x, y, w, h, callback)
-        self.isActive = initialState
 
-    def onClick(self):
-        self.isActive = not self.isActive
-        self.callback(self.isActive) # callback is a function which sets the app variable
+
+
 
 
 
