@@ -1,5 +1,5 @@
 from cmu_graphics import *
-from objects.atom import Atom
+from objects import Atom
 import math
 import utils
 
@@ -61,5 +61,11 @@ def drawSketchpad(app):
 
 def drawButtons(app):
     for button in app.buttons:
-        color = rgb(150, 150, 150) if button.isActive else rgb(100, 100, 100)
-        drawRect(*button.rect, fill=color)
+        #color = rgb(150, 150, 150) if button.isActive else rgb(100, 100, 100)
+        drawRect(*button.rect, fill=None, border='black') #drawing border
+        if button.isOn():
+            drawRect(*button.rect, fill='red', opacity=50)
+
+        x, y, w, h  = button.rect
+
+        drawImage(button.imageKey, x + w/2, y + w/2, width=30, height=30, align='center')

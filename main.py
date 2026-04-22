@@ -4,9 +4,9 @@
 #drawWhiteboard function
 
 
-import objects.atom
+from objects import Atom, Ring
 from cmu_graphics import *
-import objects.buttons
+import buttons
 import draw
 import utils
 import keyboard
@@ -15,7 +15,8 @@ import objectAdder
         
      
 def onAppStart(app):
-    print('started')
+    app.inside = None
+    print('start')
     initAppStates(app)
     initConfigVariables(app)
     makeButtons(app)
@@ -24,7 +25,18 @@ def onAppStart(app):
 
 def makeButtons(app):
     app.buttons = []
-    app.buttons.append(objects.buttons.drawingButton(0, 0, 100, 100, 'singleBond',  objects.buttons.singleBond, app))
+    with open("config.json") as f: #svg files I am using I took from
+        links = json.load(f)
+        start = 100
+        size = 60
+        app.buttons.append(buttons.drawingButton(0, start + size*0, size, size, buttons.singleBond, app, links['singleBond']))
+        app.buttons.append(buttons.drawingButton(0, start + size * 1, size, size, buttons.doubleBond, app,  links['doubleBond']))
+        app.buttons.append(buttons.drawingButton(0, start + size *2, size, size, buttons.tripleBond, app,  links['tripleBond']))
+        app.buttons.append(buttons.drawingButton(0, start + size*3, size, size, buttons.cyclohexane, app,  links['cyclohexane']))
+        app.buttons.append(buttons.drawingButton(0, start + size*4, size, size, buttons.benzene, app,  links['benzene']))
+
+
+
   
 
 def initConfigVariables(app): 
@@ -39,7 +51,7 @@ def initConfigVariables(app):
 def initAppStates(app):
     app.tempAtomPos = None  #when dragging to make new atom, stores the new positions to place the new atom. 
                              # when not dragging, will be None, and its truthiness flags for ifDragging
-    app.currentObject = objectAdder.addRing
+    app.currentObject = objectAdder.addAtom
     app.bondOrder = 1
     app.ringNumber = 6
     app.aromatic = False
@@ -62,7 +74,7 @@ def onStep(app):
             app.stepCounterForDoubleClick = None
 
 def onKeyPress(app, key):
-    if key.upper() in objects.atom.Atom.valencyDict:
+    if key.upper() in Atom.valencyDict:
         app.currElement = key.upper()
     if key == '=':
         app.bondOrder = (app.bondOrder) % 3 + 1  
@@ -72,12 +84,13 @@ def onKeyPress(app, key):
         utils.deleteSelectedAtoms(app)      
 
 def onMouseMove(app, x, y):
+    app.inside = utils.insideAButton(app, x, y)
     if not app.tempAtomPos:  #not currently dragging
         app.parentAtom = isWithinAtom(app, x, y)
 
 def onMousePress(app, x, y):
-    buttonClicked = utils.buttonCheck(app, x, y)
-    if not buttonClicked:
+    utils.buttonCheck(app, x, y)
+    if not app.inside:
         if not app.parentAtom:
             if app.selectedAtomList == []: #dont add atom if your doing box selection
                 objectAdder.addObject(app, x, y)
@@ -107,7 +120,7 @@ def onMouseDrag(app, x, y):
    
 def onMouseRelease(app, x, y):
     if app.tempAtomPos and app.parentAtom:
-        if not isWithinAtom(app, x, y):
+        if not (isWithinAtom(app, x, y) or utils.insideAButton(app, x, y)):
             objectAdder.addObject(app, x, y)
             app.parentAtom = None # This is so that the parentAtom is not desynced with position, which can  have weird results
 
@@ -128,11 +141,11 @@ def isWithinSpecificAtom(atom, x, y):
 def redrawAll(app):
     draw.drawSketchpad(app)
     draw.drawButtons(app)
-    #drawStatus(app)
+    drawStatus(app)
    
 
 def drawStatus(app):
-    pass
+    drawLabel(str(app.inside), app.width/2, 20)
 
 def main():
     runApp()

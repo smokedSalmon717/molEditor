@@ -1,5 +1,5 @@
 import math
-
+#from objects.buttons import Button
 
 def makePointDiscreteAngle(uniqueAngles, x0, y0, x1, y1):
     dx = x1 - x0
@@ -88,12 +88,25 @@ def rotateVector(vector, angle):
     return (xNew, yNew)
 
 
-
+#These really should be in seperate files
 
 def buttonCheck(app, x, y):
     for button in app.buttons:
-        if button.checkClick():
-            updateButtonStates(app, button)
+        if button.checkClick(x, y):
+            for otherButton in app.buttons:
+                if ((type(otherButton) == type(button)) and  #Deactivates other button of same kind.
+                    (button != otherButton)):
+
+                    otherButton.isActive = False
+
+def insideAButton(app, x, y):
+    for button in app.buttons:
+        if button.isInside(x, y):
+            return True
+    return False
+
+
+
 
 
 

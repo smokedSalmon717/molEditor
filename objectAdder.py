@@ -1,8 +1,7 @@
 #This file is for functions which are specific to my application
 #utils.py is for generic utils, stuff like vector math
 import utils
-from objects.atom import Atom
-from objects.ring import Ring
+import objects
 import math
 
 
@@ -23,10 +22,10 @@ def addAtom(app , x, y):
         vector = utils.makeVector(app.parentAtom.pos, (x,y))
         vector = utils.normalizeVector(*vector, app.defaultBondLength)
         x, y = utils.vectorSum(vector, app.parentAtom.pos)
-        newAtom = Atom(app.currElement, position=(x,y))
+        newAtom = objects.Atom(app.currElement, position=(x,y))
         newAtom.addBond(app.parentAtom, app.bondOrder)
     else:
-        newAtom = Atom(app.currElement, position=(x,y))
+        newAtom = objects.Atom(app.currElement, position=(x,y))
     app.atoms.append(newAtom)
     return newAtom
 
@@ -39,7 +38,7 @@ def addRing(app, x, y): #size not used, just have it cuz of how I switched betwe
         vector = utils.makeVector(app.parentAtom.pos, (x,y)) #generates vector from parents to child
         vector = utils.normalizeVector(*vector, app.defaultBondLength)
     seed = addAtom(app, x, y)
-    ring = Ring(seed, n, app.defaultBondLength, vector, aromatic = app.aromatic)
+    ring = objects.Ring(seed, n, app.defaultBondLength, vector, aromatic = app.aromatic)
     addRingToApp(app, ring)
 
 def addRingToApp(app, ring):
