@@ -1,4 +1,4 @@
-import objectAdder
+import objects.objectAdder as objectAdder
 
 class Button:
     
@@ -38,58 +38,6 @@ class drawingButton(Button):
     def onClick(self):
         self.callback(self.app)
         self.isActive = not self.isActive
-
-class selectionButton(Button):
-    pass
-
-
-
-#No reason for these functions to be here structurely, but it makes things code easier for me
-def singleBond(app):
-    app.bondOrder = 1
-    app.currentObject = objectAdder.addAtom
-
-def doubleBond(app):
-    app.bondOrder = 2
-    app.currentObjetc = objectAdder.addAtom
-
-
-def tripleBond(app):
-    app.bondOrder = 3
-    app.currentObject = objectAdder.addAtom
-
-def benzene(app):
-    app.aromatic = True
-    app.bondOrder = 1
-    app.currentObject = objectAdder.addRing
-    app.ringNumber = 6
-
-def cyclohexane(app):
-    app.aromatic = False
-    app.bondOrder = 1
-    app.currentObject = objectAdder.addRing
-    app.ringNumber = 6
-
-def cyclopentane(app):
-    app.aromatic = False
-    app.bondOrder = 1
-    app.currentObject = objectAdder.addRing
-    app.ringNumber = 5
-
-
-    
-
-
-class drawingButton(Button):
-    def checkIfActive(self):
-        self.isActive = self.variable == self.output
-
-    def onClick(self):
-        self.callback(self.app)
-        self.isActive = not self.isActive
-
-class selectionButton(Button):
-    pass
 
 
 

@@ -3,6 +3,7 @@ import math
 import utils
 
 class Atom:
+
     IDMap = dict() #counts number of atoms for each element for
                        #id assignment, but no reassignment with deletion
                        #so not for counting number of elements
@@ -26,12 +27,29 @@ class Atom:
         self.bonds = dict()  #bonds are a dictionary, keys are the atomID, and values are the order of the bond
         self.parent = parent  #future use for SMILE parsing
         self.addID()  #find the unique id identifier, so you can tell different atoms appart
+        if self.element != 'H':
+            self.addImplicitHydrogens()
 
     def isInside(self, x, y):
         return utils.distance(*self.pos, x, y) < 15
     
     def checkClick(app, x, y):
         pass
+
+    def addImplicitHydrogens(self):
+        valency = int(Atom.valencyDict[self.element])
+        for bondOrder in self.bonds.values():
+            valency -= bondOrder
+        self.implicitHydrogens = []
+        for i in range(valency):
+            hydrogen = ImplicitHydrogen(self)
+            self.addBond(hydrogen)
+            
+        
+
+
+        
+
         
 
     def addID(self):
@@ -62,6 +80,18 @@ class Atom:
         return hash(self.id()) > hash(other.id())
         #This means that order is consistent but 
         
+
+
+
+class ImplicitHydrogen(Atom):
+    def __init__(self, parent):
+        super().__init__('H', parent, 0)
+        self.parent = parent
+        self.theta = 2
+        self.pos = utils.vectorSum(utils.rotateVector((30,0),self.theta), self.parent.pos)
+
+
+
 class Bond:
     def __int__(self, atom1, atom2, order):
         self.atoms = [atom1, atom2]
@@ -104,19 +134,20 @@ class Ring:
     def __hash__(self):
         return hash(str(self))
 
-class Molecule:
+class Molecule: #Bad, not needed
     def __init__(self, atoms):
         self.atoms = atoms
         self.addedBonds = []
-        self.structure = {atoms[0] : self.generateStructureDict(atoms[0], None)}
+        self.structure = {atoms[0] : self.generateStructureDict([None, atoms[0]])}
 
 
-    def generateStructureDict(self, currAtom, prevAtom):
+    def generateStructureDict(self, parentAtomChain):
+        currAtom = parentAtomChain[-1]
+        prevAtom = parentAtomChain[-2]
         res = dict()
-        print(self.addedBonds)
         for atom in currAtom.bonds.keys():
-            if atom != prevAtom:
-                next = self.generateStructureDict(atom, currAtom)    
+            if not (atom in parentAtomChain): 
+                next = self.generateStructureDict(parentAtomChain + [atom])
                 res[atom] = next
         
         return res

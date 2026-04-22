@@ -1,7 +1,7 @@
 #This file is for functions which are specific to my application
 #utils.py is for generic utils, stuff like vector math
 import utils
-import objects
+import objects.objects as objects
 
 
 

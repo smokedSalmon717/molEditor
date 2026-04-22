@@ -2,14 +2,15 @@
 #one of the ones built into cmu_graphics, do not include it in the file
 #even stuff like drawAtoms is inside a different file is gets called by the
 #drawWhiteboard function
-from objects import Atom, Molecule
+from objects.objects import Atom, Molecule
 from cmu_graphics import *
-import buttons
+from buttons.buttons import Button, drawingButton
+import buttons.functions 
 import draw
 import utils
 import keyboard
 import json
-import objectAdder
+import objects.objectAdder as objectAdder
 
         
 
@@ -30,11 +31,14 @@ def makeButtons(app):
         links = json.load(f)
         start = 100
         size = 60
-        app.buttons.append(buttons.drawingButton(0, start + size*0, size, size, buttons.singleBond, app, links['singleBond']))
-        app.buttons.append(buttons.drawingButton(0, start + size * 1, size, size, buttons.doubleBond, app,  links['doubleBond']))
-        app.buttons.append(buttons.drawingButton(0, start + size *2, size, size, buttons.tripleBond, app,  links['tripleBond']))
-        app.buttons.append(buttons.drawingButton(0, start + size*3, size, size, buttons.cyclohexane, app,  links['cyclohexane']))
-        app.buttons.append(buttons.drawingButton(0, start + size*4, size, size, buttons.benzene, app,  links['benzene']))
+        #Adding bond-type buttons. Initially I store the URL in config, but realized that was stupid
+        app.buttons.append(drawingButton(0, start + size*0, size, size, buttons.functions.singleBond, app, "https://molview.org/img/bond/single.svg"))
+        app.buttons.append(drawingButton(0, start + size * 1, size, size, buttons.functions.doubleBond, app, "https://molview.org/img/bond/double.svg"))
+        app.buttons.append(drawingButton(0, start + size *2, size, size, buttons.functions.tripleBond, app,  "https://molview.org/img/bond/triple.svg"))
+        app.buttons.append(drawingButton(0, start + size*3, size, size, buttons.functions.cyclohexane, app,  "https://molview.org/img/frag/cyclohexane.svg"))
+        app.buttons.append(drawingButton(0, start + size*4, size, size, buttons.functions.benzene, app,  "https://molview.org/img/frag/benzene.svg"))
+
+
 
 
 
@@ -90,7 +94,6 @@ def onKeyPress(app, key):
         utils.deleteSelectedAtoms(app)      
 
 def onMouseMove(app, x, y):
-    #app.objectHoveringOver = utils.checkIfHoveringOverObject(app, x, y)
 
     app.inside = utils.insideAButton(app, x, y)
     if not app.tempAtomPos:  #not currently dragging
@@ -133,7 +136,12 @@ def onMouseDrag(app, x, y):
 def onMouseRelease(app, x, y):
     if app.tempAtomPos and app.parentAtom:
         if not utils.insideAButton(app, x, y):
-            objectAdder.addObject(app, x, y)
+            if not utils.isWithinAtom(app, x, y):
+                objectAdder.addObject(app, x, y)
+            else:
+                otherAtom = utils.isWithinAtom(app, x, y)
+                if otherAtom != app.parentAtom:
+                    app.parentAtom.addBond(otherAtom, order=app.bondOrder)
             app.parentAtom = None # This is so that the parentAtom is not desynced with position, which can  have weird results
 
 

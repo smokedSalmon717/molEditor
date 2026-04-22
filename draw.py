@@ -1,5 +1,5 @@
 from cmu_graphics import *
-from objects import Atom
+from objects.objects import Atom
 import math
 import utils
 
@@ -14,7 +14,7 @@ def drawAtoms(app):
         element = atom.element
         color = Atom.colorMap[element]
         drawLabel(atom.id(),*atom.pos, size=16, fill=color)
-        
+
 def drawBonds(app):
     bonds = getBonds(app)
     for atom1, atom2, order in bonds:
@@ -49,7 +49,6 @@ def drawTempBond(app):
     if app.tempAtomPos and app.parentAtom in app.atoms:
         drawBond(app, app.parentAtom.pos, app.tempAtomPos, app.bondOrder)
 
-
 def drawSketchpad(app):
     drawSelection(app)
     drawAtoms(app)
@@ -67,5 +66,5 @@ def drawButtons(app):
             drawRect(*button.rect, fill='red', opacity=50)
 
         x, y, w, h  = button.rect
-
+        print(button.imageKey)
         drawImage(button.imageKey, x + w/2, y + w/2, width=30, height=30, align='center')
