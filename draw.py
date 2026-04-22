@@ -62,5 +62,4 @@ def drawSketchpad(app):
 def drawButtons(app):
     for button in app.buttons:
         color = rgb(150, 150, 150) if button.isActive else rgb(100, 100, 100)
-        x, y, w, h = button.x, button.y, button.w, button.h
-        drawRect(x, y, w, h, fill=color)
+        drawRect(*button.rect, fill=color)

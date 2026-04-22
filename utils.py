@@ -90,6 +90,15 @@ def rotateVector(vector, angle):
 
 
 
+def buttonCheck(app, x, y):
+    for button in app.buttons:
+        if button.checkClick():
+            updateButtonStates(app, button)
+
+
+
+
+
 def normalizeVector(x, y, length):
     scalar = length / math.hypot(x, y)
     return scalar * x, scalar * y

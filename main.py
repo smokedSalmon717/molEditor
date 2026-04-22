@@ -24,7 +24,7 @@ def onAppStart(app):
 
 def makeButtons(app):
     app.buttons = []
-    #app.buttons.append(objects.buttons.Button(0, 0, 50, 50, '6-ring'))
+    app.buttons.append(objects.buttons.drawingButton(0, 0, 100, 100, 'singleBond',  objects.buttons.singleBond, app))
   
 
 def initConfigVariables(app): 
@@ -42,6 +42,7 @@ def initAppStates(app):
     app.currentObject = objectAdder.addRing
     app.bondOrder = 1
     app.ringNumber = 6
+    app.aromatic = False
 
     app.selectedAtomList = []
     app.stepCounterForDoubleClick = None
@@ -75,19 +76,20 @@ def onMouseMove(app, x, y):
         app.parentAtom = isWithinAtom(app, x, y)
 
 def onMousePress(app, x, y):
-    if not app.parentAtom:
-        if app.selectedAtomList == []: #dont add atom if your doing box selection
-            objectAdder.addObject(app, x, y)
+    buttonClicked = utils.buttonCheck(app, x, y)
+    if not buttonClicked:
+        if not app.parentAtom:
+            if app.selectedAtomList == []: #dont add atom if your doing box selection
+                objectAdder.addObject(app, x, y)
+            else:
+                app.selectedAtomList = []
         else:
-            app.selectedAtomList = []
-    else:
-        if app.stepCounterForDoubleClick != None:
-            app.selectedAtomList.append(app.parentAtom) 
-            #abuse of notation, not literally parent atom, just atom being hovered over
-        else:
-            app.stepCounterForDoubleClick = 10
-            #Time for double clicks to work. Rn its 0.5 seconds
-
+            if app.stepCounterForDoubleClick != None:
+                app.selectedAtomList.append(app.parentAtom) 
+                #abuse of notation, not literally parent atom, just atom being hovered over
+            else:
+                app.stepCounterForDoubleClick = 10
+                #Time for double clicks to work. Rn its 0.5 seconds
 
 
             

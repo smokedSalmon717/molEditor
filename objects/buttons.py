@@ -1,6 +1,6 @@
 
 
-
+import objectAdder
 #The template button was written by AI (Gemini)
 #But the subclasses are written by me.
 class Button:
@@ -19,10 +19,56 @@ class Button:
         return False
         
     def onClick(self):
-        self.callback(self.app)
+        pass
 
+
+    
+
+
+class drawingButton(Button):
     def checkIfActive(self):
         self.isActive = self.variable == self.output
+
+    def onClick(self):
+        self.callback(self.app)
+        self.isActive = True
+
+class selectionButton(Button):
+    pass
+
+
+
+
+def singleBond(app):
+    app.bondOrder = 1
+    app.currentObject = objectAdder.addAtom
+
+def doubleBond(app):
+    app.bondOrder = 2
+    app.currentObjetc = objectAdder.addAtom
+
+
+def tripleBond(app):
+    app.bondOrder = 3
+    app.currentObject = objectAdder.addAtom
+
+def benzene(app):
+    app.aromatic = True
+    app.bondOrder = 1
+    app.currentObject = objectAdder.addRing
+    app.ringNumber = 6
+
+def cyclohexane(app):
+    app.aromatic = False
+    app.bondOrder = 1
+    app.currentObject = objectAdder.addRing
+    app.ringNumber = 6
+
+def cyclopentane(app):
+    app.aromatic = False
+    app.bondOrder = 1
+    app.currentObject = objectAdder.addRing
+    app.ringNumber = 5
 
 
 

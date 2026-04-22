@@ -39,7 +39,7 @@ def addRing(app, x, y): #size not used, just have it cuz of how I switched betwe
         vector = utils.makeVector(app.parentAtom.pos, (x,y)) #generates vector from parents to child
         vector = utils.normalizeVector(*vector, app.defaultBondLength)
     seed = addAtom(app, x, y)
-    ring = Ring(seed, n, app.defaultBondLength, vector, aromatic = True)
+    ring = Ring(seed, n, app.defaultBondLength, vector, aromatic = app.aromatic)
     addRingToApp(app, ring)
 
 def addRingToApp(app, ring):
