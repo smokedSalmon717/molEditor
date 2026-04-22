@@ -1,6 +1,18 @@
 import math
 #from objects.buttons import Button
 
+def checkIfHoveringOverObject(app, x, y):
+    objects = app.buttons + app.atoms + app.bonds
+    for object in objects:
+        if object.isInside(x, y):
+            return object
+        
+
+def isWithinAtom(app, x, y):
+    for atom in app.atoms:
+        if atom.isInside(x, y):
+            return atom
+
 def makePointDiscreteAngle(uniqueAngles, x0, y0, x1, y1):
     dx = x1 - x0
     dy = y1 - y0

@@ -2,9 +2,7 @@
 #one of the ones built into cmu_graphics, do not include it in the file
 #even stuff like drawAtoms is inside a different file is gets called by the
 #drawWhiteboard function
-
-
-from objects import Atom, Ring
+from objects import Atom, Molecule
 from cmu_graphics import *
 import buttons
 import draw
@@ -12,7 +10,9 @@ import utils
 import keyboard
 import json
 import objectAdder
+
         
+
      
 def onAppStart(app):
     app.inside = None
@@ -21,6 +21,7 @@ def onAppStart(app):
     initConfigVariables(app)
     makeButtons(app)
     app.atoms = []
+    app.bonds = []
     app.rings = []
 
 def makeButtons(app):
@@ -49,6 +50,7 @@ def initConfigVariables(app):
     app.uniqueAngles = setting["uniqueAngles"]
 
 def initAppStates(app):
+    app.objectHoveringOver = None
     app.tempAtomPos = None  #when dragging to make new atom, stores the new positions to place the new atom. 
                              # when not dragging, will be None, and its truthiness flags for ifDragging
     app.currentObject = objectAdder.addAtom
@@ -74,6 +76,10 @@ def onStep(app):
             app.stepCounterForDoubleClick = None
 
 def onKeyPress(app, key):
+
+    if key == 'm':
+        mol = Molecule(app.atoms)
+        print(mol.structure)
     if key.upper() in Atom.valencyDict:
         app.currElement = key.upper()
     if key == '=':
@@ -84,11 +90,17 @@ def onKeyPress(app, key):
         utils.deleteSelectedAtoms(app)      
 
 def onMouseMove(app, x, y):
+    #app.objectHoveringOver = utils.checkIfHoveringOverObject(app, x, y)
+
     app.inside = utils.insideAButton(app, x, y)
     if not app.tempAtomPos:  #not currently dragging
-        app.parentAtom = isWithinAtom(app, x, y)
+        app.parentAtom = utils.isWithinAtom(app, x, y)
 
 def onMousePress(app, x, y):
+
+
+
+
     utils.buttonCheck(app, x, y)
     if not app.inside:
         if not app.parentAtom:
@@ -120,7 +132,7 @@ def onMouseDrag(app, x, y):
    
 def onMouseRelease(app, x, y):
     if app.tempAtomPos and app.parentAtom:
-        if not (isWithinAtom(app, x, y) or utils.insideAButton(app, x, y)):
+        if not utils.insideAButton(app, x, y):
             objectAdder.addObject(app, x, y)
             app.parentAtom = None # This is so that the parentAtom is not desynced with position, which can  have weird results
 
@@ -128,15 +140,7 @@ def onMouseRelease(app, x, y):
     #------------- reseting vars
     app.tempAtomPos = None 
     
-def isWithinAtom(app, x, y):
-    for atom in app.atoms:
-        if isWithinSpecificAtom(atom, x, y):
-            return atom
-       
-def isWithinSpecificAtom(atom, x, y):
-    dist = utils.distance(*atom.pos, x, y)
-    if dist < 15:
-        return atom
+
            
 def redrawAll(app):
     draw.drawSketchpad(app)

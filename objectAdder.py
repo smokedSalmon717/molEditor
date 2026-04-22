@@ -2,7 +2,6 @@
 #utils.py is for generic utils, stuff like vector math
 import utils
 import objects
-import math
 
 
 
@@ -15,7 +14,15 @@ import math
 def addObject(app, x, y):
     app.currentObject(app, x, y)
 
+def addBond(app):
+    order = app.bondOrder
 
+
+def newBondFromParent(app, parent, child):
+    pass
+
+def totallyNewBond(app, x, y):
+    pass
 
 def addAtom(app , x, y):
     if app.parentAtom:

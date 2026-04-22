@@ -27,7 +27,13 @@ class Atom:
         self.parent = parent  #future use for SMILE parsing
         self.addID()  #find the unique id identifier, so you can tell different atoms appart
 
+    def isInside(self, x, y):
+        return utils.distance(*self.pos, x, y) < 15
+    
+    def checkClick(app, x, y):
+        pass
         
+
     def addID(self):
         Atom.IDMap[self.element] = Atom.IDMap.get(self.element, 0) + 1
         self.idValue = Atom.IDMap[self.element]
@@ -35,11 +41,13 @@ class Atom:
         
     def __repr__(self):
         return f'{self.element}{self.idValue}'
+    
+    def __hash__(self):
+        return hash(str(self))
         
     
     def id(self):
         return str(self)
-        
         
     def addBond(self, other, order = 1): #bond order defaults to 1
         if isinstance(other, Atom) and other != self:
@@ -59,6 +67,9 @@ class Bond:
         self.atoms = [atom1, atom2]
         self.order = order
         self.endpoints = (*atom1.pos, *atom2.pos)
+    def isInside(self, x, y):
+        return None
+
 
 class Ring: 
     def __init__(self, seedAtom, n, bondLength, vector, aromatic = False): 
@@ -92,4 +103,39 @@ class Ring:
     
     def __hash__(self):
         return hash(str(self))
+
+class Molecule:
+    def __init__(self, atoms):
+        self.atoms = atoms
+        self.addedBonds = []
+        self.structure = {atoms[0] : self.generateStructureDict(atoms[0], None)}
+
+
+    def generateStructureDict(self, currAtom, prevAtom):
+        res = dict()
+        print(self.addedBonds)
+        for atom in currAtom.bonds.keys():
+            if atom != prevAtom:
+                next = self.generateStructureDict(atom, currAtom)    
+                res[atom] = next
+        
+        return res
+    
+    def addImplicitHydrogen(self, app, tree):
+        for parent in tree:
+            if parent.element == 'H':
+                continue
+            initialValence = Atom.valencyDict[parent.element]
+
+
+                
+
+
+                
+
+                
+        
+
+    
+
 

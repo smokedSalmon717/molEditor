@@ -13,7 +13,7 @@ def drawAtoms(app):
     for atom in app.atoms:
         element = atom.element
         color = Atom.colorMap[element]
-        drawLabel(element,*atom.pos, size=16, fill=color)
+        drawLabel(atom.id(),*atom.pos, size=16, fill=color)
         
 def drawBonds(app):
     bonds = getBonds(app)
