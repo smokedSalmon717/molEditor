@@ -16,18 +16,19 @@ from pathlib import Path
         
 
 def onAppStart(app):
-    app.inside = None
+    app.basePath = str(Path(__file__).resolve().parent) + '/images/'
     print('start')
     initAppStates(app)
     initConfigVariables(app)
     makeButtons(app)
+    
     app.atoms = []
     app.bonds = []
     app.rings = []
 
 def makeButtons(app):
     app.buttons = []
-    #AI WRITTEN -------------
+    #AI WRITTEN, kinda understand how it works? -------------
     BASE_DIR = Path(__file__).resolve().parent
     ICON_PATH = BASE_DIR / "images"
 
@@ -35,21 +36,22 @@ def makeButtons(app):
     start = 100
     size = 60
         #Adding bond-type buttons. Initially I store the URL in config, but realized that was stupid
-    app.buttons.append(drawingButton(0, start + size*0, size, size, buttons.functions.singleBond, app, str(ICON_PATH / "single.svg")))
-    app.buttons.append(drawingButton(0, start + size * 1, size, size, buttons.functions.doubleBond, app, str(ICON_PATH / "double.svg")))
-    app.buttons.append(drawingButton(0, start + size *2, size, size, buttons.functions.tripleBond, app,  str(ICON_PATH / "triple.svg")))
-    app.buttons.append(drawingButton(0, start + size*3, size, size, buttons.functions.benzene, app,  str(ICON_PATH / "benzene.svg")))
-    app.buttons.append(drawingButton(0, start + size*4, size, size, buttons.functions.cyclohexane, app,  str(ICON_PATH / "cyclohexane.svg")))
-    app.buttons.append(drawingButton(0, start + size*5, size, size, buttons.functions.cyclopentane, app,  str(ICON_PATH / "cyclopentane.svg")))
+    app.buttons.append(drawingButton(0, start + size*0, size, size, buttons.functions.singleBond, app))
+    app.buttons.append(drawingButton(0, start + size * 1, size, size, buttons.functions.doubleBond, app))
+    app.buttons.append(drawingButton(0, start + size *2, size, size, buttons.functions.tripleBond, app))
+    app.buttons.append(drawingButton(0, start + size*3, size, size, buttons.functions.benzene, app))
+    app.buttons.append(drawingButton(0, start + size*4, size, size, buttons.functions.cyclohexane, app))
+    app.buttons.append(drawingButton(0, start + size*5, size, size, buttons.functions.cyclopentane, app))
 
     #Now elements
     size = 50
-    app.buttons.append(drawingButton(app.width - size, start + size*0, size, size, buttons.functions.carbon, app,  str(ICON_PATH / "carbon.svg")))
-    app.buttons.append(drawingButton(app.width - size, start + size*1, size, size, buttons.functions.oxygen, app,  str(ICON_PATH / "oxygen.svg")))
-    app.buttons.append(drawingButton(app.width - size, start + size*2, size, size, buttons.functions.hydrogen, app,  str(ICON_PATH / "hydrogen.svg")))
-    app.buttons.append(drawingButton(app.width - size, start + size*3, size, size, buttons.functions.nitrogen, app,  str(ICON_PATH / "nitrogen.svg")))
-    app.buttons.append(drawingButton(app.width - size, start + size*4, size, size, buttons.functions.chlorine, app,  str(ICON_PATH / "chlorine.svg")))
-    #app.buttons.append(drawingButton(app.width - size, start + size*0, size, size, buttons.functions.fluorine, app,  str(ICON_PATH / "fluorine.svg")))
+    app.buttons.append(drawingButton(app.width - size, start + size*0, size, size, buttons.functions.carbon, app))
+    app.buttons.append(drawingButton(app.width - size, start + size*1, size, size, buttons.functions.oxygen, app))
+    app.buttons.append(drawingButton(app.width - size, start + size*2, size, size, buttons.functions.hydrogen, app))
+    app.buttons.append(drawingButton(app.width - size, start + size*3, size, size, buttons.functions.nitrogen, app))
+    app.buttons.append(drawingButton(app.width - size, start + size*4, size, size, buttons.functions.chlorine, app))
+    app.currElement = 'C'
+
     
 
 
@@ -66,6 +68,7 @@ def initConfigVariables(app):
     app.bondGap = setting["bondGap"] #this variable controls how much space there is between atom and bond
     app.defaultBondLength = setting["defaultBondLength"]
     app.uniqueAngles = setting["uniqueAngles"]
+    app.atomSize = setting["atomSize"]
 
 def initAppStates(app):
     app.objectHoveringOver = None
@@ -77,6 +80,7 @@ def initAppStates(app):
     app.aromatic = False
 
     app.selectedAtomList = []
+    app.selectedBond = None
     app.stepCounterForDoubleClick = None
     app.currElement = 'C'
     app.parentAtom = None
@@ -108,14 +112,19 @@ def onKeyPress(app, key):
         utils.deleteSelectedAtoms(app)      
 
 def onMouseMove(app, x, y):
-
     app.inside = utils.insideAButton(app, x, y)
     if not app.tempAtomPos:  #not currently dragging
         app.parentAtom = utils.isWithinAtom(app, x, y)
+        if not app.parentAtom:
+            app.selectedBond = utils.isWithinBond(app, x, y)
+        
+
 
 def onMousePress(app, x, y):
     utils.buttonCheck(app, x, y)
-    if not app.inside:
+    if app.selectedBond != None:
+        app.selectedBond.checkClick(x, y)
+    if not (app.inside or app.selectedBond):
         if not app.parentAtom:
             if app.selectedAtomList == []: #dont add atom if your doing box selection
                 objectAdder.addObject(app, x, y)
@@ -128,6 +137,7 @@ def onMousePress(app, x, y):
             else:
                 app.stepCounterForDoubleClick = 10
                 #Time for double clicks to work. Rn its 0.5 seconds
+    
 
 
             
@@ -140,6 +150,7 @@ def onMouseDrag(app, x, y):
                 utils.moveGroup(app.selectedAtomList, dx, dy)
             else:
                 app.parentAtom.pos = (x,y)
+
         else:
             app.tempAtomPos = utils.makePointDiscreteAngle(app.uniqueAngles ,*app.parentAtom.pos, x, y)
    

@@ -8,27 +8,26 @@ def drawSelection(app):
         drawCircle(*app.parentAtom.pos, 15, fill='gray', opacity=25)  
     for atom in app.selectedAtomList:
         drawCircle(*atom.pos, 20, fill='cyan',opacity = 20)
+    if app.selectedBond != None:
+        x1, y1, x2, y2 = app.selectedBond.endpoints
+        cx, cy = (x1 + x2)/2, (y1 + y2)/2
+        angle = 90 - math.degrees(math.atan2(x1-x2,y1-y2))
+        width = distance(x1, y1, x2, y2)
+        drawOval(cx, cy, width, 20, rotateAngle=angle, fill='yellow', opacity=25)
         
 def drawAtoms(app):
     for atom in app.atoms:
-        element = atom.element
-        color = Atom.colorMap[element]
-        drawLabel(atom.id(),*atom.pos, size=16, fill=color)
+        width, height= getImageSize(atom.imagePath)
+        scale = app.atomSize / max(height, width)
+        height, width = height*scale, width*scale
+        drawImage(atom.imagePath, *atom.pos, height= height, width =width, align='center')
 
 def drawBonds(app):
-    bonds = getBonds(app)
-    for atom1, atom2, order in bonds:
-        pos1, pos2 = atom1.pos, atom2.pos
-        drawBond(app, pos1, pos2, order)
+    for bond in app.bonds:
+        x1, y1, x2, y2 = bond.endpoints
+        drawBond(app, (x1, y1), (x2, y2), bond.order)
 
-def getBonds(app):
-    bonds = set()
-    for atom in app.atoms:
-        for other in atom.bonds:
-            atom1, atom2 = max(atom, other), min(atom, other)
-            bondOrder = atom.bonds[other]
-            bonds.add((atom1, atom2, bondOrder))
-    return bonds
+
             
 def drawBond(app, pos1, pos2, order=1):
         dx, dy = (pos1[1] - pos2[1]),(pos1[0] - pos2[0])

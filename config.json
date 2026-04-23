@@ -4,6 +4,7 @@
     "bondGap": 10,
     "uniqueAngles": 12,
     "defaultBondLength": 75,
+    "atomSize": 25,
     "benzene": "https://molview.org/img/frag/benzene.svg",
     "cyclohexane": "https://molview.org/img/frag/cyclohexane.svg",
     "cyclopentane" : "https://molview.org/img/frac/cyclopentane.svg",

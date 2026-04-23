@@ -2,15 +2,14 @@ import objects.objectAdder as objectAdder
 
 class Button:
     
-    def __init__(self, x, y, w, h, callback, app, imageKey):
+    def __init__(self, x, y, w, h, callback, app):
         self.app = app
         self.rect = (x, y, w, h)
         self.callback = callback # The function to run when clicked
-        self.imageKey = imageKey
+        self.imageKey = callback(app)
         self.isActive = False
 
     def checkClick(self, mouseX, mouseY):
-        x, y, w, h = self.rect
         if self.isInside(mouseX, mouseY):
             self.onClick()
             return True

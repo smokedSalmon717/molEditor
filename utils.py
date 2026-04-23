@@ -118,6 +118,11 @@ def insideAButton(app, x, y):
     return False
 
 
+def isWithinBond(app, x, y):
+    for bond in app.bonds:
+        if bond.isInside(x, y):
+            return bond
+    return None
 
 
 

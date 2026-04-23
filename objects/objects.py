@@ -1,7 +1,7 @@
 
 import math
 import utils
-
+from pathlib import Path
 class Atom:
 
     IDMap = dict() #counts number of atoms for each element for
@@ -11,24 +11,32 @@ class Atom:
     'H':1,
     'C':4,
     'N':3,
-    'O':2}     #this will be used in the cleanup functon/parcing.
-    colorMap = {
-        'H':'black',
-        'C':'black',
-        'O':'red',
-        'N':'blue'
-    } #this is used for coloring of each element
+    'O':2,
+    'Cl':1,
+    'F':1,
+    'S':2}     #this will be used in the cleanup functon/parcing.
+
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    ICON_PATH = BASE_DIR / "images"
+
 
 
     def __init__(self, element, parent=None, position=None, id=0):
         self.element = element #atomic symbol
         self.pos = position
+        self.getImage()
         self.hydrogenCount = Atom.valencyDict[element] #used so if u just add carbon, 4 hydrogen gets added, and 3 for O, and etc
         self.bonds = dict()  #bonds are a dictionary, keys are the atomID, and values are the order of the bond
         self.parent = parent  #future use for SMILE parsing
         self.addID()  #find the unique id identifier, so you can tell different atoms appart
-        if self.element != 'H':
-            self.addImplicitHydrogens()
+        #if self.element != 'H':
+          #  self.addImplicitHydrogens()
+
+    def getImage(self):
+        BASE_DIR = Path(__file__).resolve().parent.parent
+        self.imagePath = str(BASE_DIR / "images") + '/' + self.element + '.svg'
+
+
 
     def isInside(self, x, y):
         return utils.distance(*self.pos, x, y) < 15
@@ -93,12 +101,54 @@ class ImplicitHydrogen(Atom):
 
 
 class Bond:
-    def __int__(self, atom1, atom2, order):
+    def __init__(self, atom1, atom2, order):
         self.atoms = [atom1, atom2]
         self.order = order
-        self.endpoints = (*atom1.pos, *atom2.pos)
+
+
+    @property
+    def endpoints(self):
+        x1, y1 = self.atoms[0].pos
+        x2, y2 = self.atoms[1].pos
+        return x1, y1, x2, y2
+
+
+    def checkClick(self, x, y):
+        if self.isInside(x, y):
+            self.onClick()
+
     def isInside(self, x, y):
-        return None
+        return self.point_near_segment(x, y)
+    
+    def onClick(self):
+        self.order = (self.order % 3) + 1
+    
+    #AI WRITTEN, Chat GPT ------------
+    def point_near_segment(self,mouseX, mouseY):
+        tolerance = 5
+        x1, y1, x2, y2 = self.endpoints
+        dx = x2 - x1
+        dy = y2 - y1
+
+        if dx == 0 and dy == 0:
+            # segment is just a point
+            return math.hypot(mouseX - x1, mouseY - y1) <= tolerance
+
+        # projection factor
+        t = ((mouseX - x1) * dx + (mouseY - y1) * dy) / (dx * dx + dy * dy)
+        t = max(0, min(1, t))
+
+        # closest point
+        closest_x = x1 + t * dx
+        closest_y = y1 + t * dy
+
+        # distance check
+        distance = math.hypot(mouseX - closest_x, mouseY - closest_y)
+        return distance <= tolerance
+
+    #-----------------------------
+    
+
 
 
 class Ring: 
@@ -123,7 +173,8 @@ class Ring:
             newAtom = Atom('C', parent = self.atoms[-1], position = self.pos)
             newAtom.addBond(self.atoms[-1], order = self.bondOrder )#add bond with previous
             self.atoms.append(newAtom)
-        self.atoms[-1].addBond(self.atoms[0]) #fully connect ring
+        self.atoms[-1].addBond(self.atoms[0], order= 1)
+
 
     def __repr__(self):
         res = '<'
