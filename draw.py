@@ -59,12 +59,25 @@ def drawSketchpad(app):
 
 
 def drawButtons(app):
-    for button in app.buttons:
-        #color = rgb(150, 150, 150) if button.isActive else rgb(100, 100, 100)
-        drawRect(*button.rect, fill=None, border='black') #drawing border
-        if button.isOn():
-            drawRect(*button.rect, fill='red', opacity=50)
-
+    def drawButtonBody(button):
         x, y, w, h  = button.rect
-        print(button.imageKey)
-        drawImage(button.imageKey, x + w/2, y + w/2, width=30, height=30, align='center')
+        drawRect(x, y, w, h, fill=rgb(220,220,215), border=rgb(10,10,30)) #drawing border
+    def drawButtonIcon(button):
+        height, width = getImageSize(button.imageKey)
+        aspectRatio = height/width 
+        x, y, w, h  = button.rect
+        drawImage(button.imageKey, x + w/2, y + h/2, width=30*aspectRatio, height=30, align='center')
+    def drawButtonHighlight(button):
+        if button.isOn():
+            drawRect(*button.rect, fill='red', opacity=25)
+
+    for button in app.buttons:
+        drawButtonBody(button)
+        drawButtonIcon(button)
+        drawButtonHighlight(button)
+
+
+
+
+
+

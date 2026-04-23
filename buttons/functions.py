@@ -41,18 +41,21 @@ def cyclopentane(app):
     app.ringNumber = 5
 
 def carbon(app):
-    app.element = 'C'
+    app.currElement = 'C'
     app.currentObject = objectAdder.addAtom
 
 def oxygen(app):
-    app.element = 'O'
+    app.currElement = 'O'
     app.currentObject = objectAdder.addAtom
 
 def hydrogen(app):
-    app.element = 'H'
+    app.currElement = 'H'
     app.currentObject = objectAdder.addAtom
 
 def nitrogen(app):
-    app.element = 'N'
+    app.currElement = 'N'
+    app.currentObject = objectAdder.addAtom
+def chlorine(app):
+    app.currElement = 'Cl'
     app.currentObject = objectAdder.addAtom
 

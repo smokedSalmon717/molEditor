@@ -11,10 +11,10 @@ import utils
 import keyboard
 import json
 import objects.objectAdder as objectAdder
+from pathlib import Path
 
         
 
-     
 def onAppStart(app):
     app.inside = None
     print('start')
@@ -27,16 +27,30 @@ def onAppStart(app):
 
 def makeButtons(app):
     app.buttons = []
-    with open("config.json") as f: #svg files I am using I took from
-        links = json.load(f)
-        start = 100
-        size = 60
+    #AI WRITTEN -------------
+    BASE_DIR = Path(__file__).resolve().parent
+    ICON_PATH = BASE_DIR / "images"
+
+    #-----------------------------------
+    start = 100
+    size = 60
         #Adding bond-type buttons. Initially I store the URL in config, but realized that was stupid
-        app.buttons.append(drawingButton(0, start + size*0, size, size, buttons.functions.singleBond, app, "https://molview.org/img/bond/single.svg"))
-        app.buttons.append(drawingButton(0, start + size * 1, size, size, buttons.functions.doubleBond, app, "https://molview.org/img/bond/double.svg"))
-        app.buttons.append(drawingButton(0, start + size *2, size, size, buttons.functions.tripleBond, app,  "https://molview.org/img/bond/triple.svg"))
-        app.buttons.append(drawingButton(0, start + size*3, size, size, buttons.functions.cyclohexane, app,  "https://molview.org/img/frag/cyclohexane.svg"))
-        app.buttons.append(drawingButton(0, start + size*4, size, size, buttons.functions.benzene, app,  "https://molview.org/img/frag/benzene.svg"))
+    app.buttons.append(drawingButton(0, start + size*0, size, size, buttons.functions.singleBond, app, str(ICON_PATH / "single.svg")))
+    app.buttons.append(drawingButton(0, start + size * 1, size, size, buttons.functions.doubleBond, app, str(ICON_PATH / "double.svg")))
+    app.buttons.append(drawingButton(0, start + size *2, size, size, buttons.functions.tripleBond, app,  str(ICON_PATH / "triple.svg")))
+    app.buttons.append(drawingButton(0, start + size*3, size, size, buttons.functions.benzene, app,  str(ICON_PATH / "benzene.svg")))
+    app.buttons.append(drawingButton(0, start + size*4, size, size, buttons.functions.cyclohexane, app,  str(ICON_PATH / "cyclohexane.svg")))
+    app.buttons.append(drawingButton(0, start + size*5, size, size, buttons.functions.cyclopentane, app,  str(ICON_PATH / "cyclopentane.svg")))
+
+    #Now elements
+    size = 50
+    app.buttons.append(drawingButton(app.width - size, start + size*0, size, size, buttons.functions.carbon, app,  str(ICON_PATH / "carbon.svg")))
+    app.buttons.append(drawingButton(app.width - size, start + size*1, size, size, buttons.functions.oxygen, app,  str(ICON_PATH / "oxygen.svg")))
+    app.buttons.append(drawingButton(app.width - size, start + size*2, size, size, buttons.functions.hydrogen, app,  str(ICON_PATH / "hydrogen.svg")))
+    app.buttons.append(drawingButton(app.width - size, start + size*3, size, size, buttons.functions.nitrogen, app,  str(ICON_PATH / "nitrogen.svg")))
+    app.buttons.append(drawingButton(app.width - size, start + size*4, size, size, buttons.functions.chlorine, app,  str(ICON_PATH / "chlorine.svg")))
+    #app.buttons.append(drawingButton(app.width - size, start + size*0, size, size, buttons.functions.fluorine, app,  str(ICON_PATH / "fluorine.svg")))
+    
 
 
 
@@ -100,10 +114,6 @@ def onMouseMove(app, x, y):
         app.parentAtom = utils.isWithinAtom(app, x, y)
 
 def onMousePress(app, x, y):
-
-
-
-
     utils.buttonCheck(app, x, y)
     if not app.inside:
         if not app.parentAtom:
@@ -134,15 +144,14 @@ def onMouseDrag(app, x, y):
             app.tempAtomPos = utils.makePointDiscreteAngle(app.uniqueAngles ,*app.parentAtom.pos, x, y)
    
 def onMouseRelease(app, x, y):
-    if app.tempAtomPos and app.parentAtom:
-        if not utils.insideAButton(app, x, y):
-            if not utils.isWithinAtom(app, x, y):
-                objectAdder.addObject(app, x, y)
-            else:
-                otherAtom = utils.isWithinAtom(app, x, y)
-                if otherAtom != app.parentAtom:
-                    app.parentAtom.addBond(otherAtom, order=app.bondOrder)
-            app.parentAtom = None # This is so that the parentAtom is not desynced with position, which can  have weird results
+    if app.tempAtomPos and app.parentAtom and not utils.insideAButton(app, x, y): #this is exterior since want nothing to happen if this fails
+        if not utils.isWithinAtom(app, x, y):
+            objectAdder.addObject(app, x, y)
+        else:
+            otherAtom = utils.isWithinAtom(app, x, y)
+            if otherAtom != app.parentAtom:
+                app.parentAtom.addBond(otherAtom, order=app.bondOrder)
+        app.parentAtom = None # This is so that the parentAtom is not desynced with position, which can  have weird results
 
 
     #------------- reseting vars
@@ -157,7 +166,7 @@ def redrawAll(app):
    
 
 def drawStatus(app):
-    drawLabel(str(app.inside), app.width/2, 20)
+    drawLabel(f'{app.currElement}', app.width/2, 20)
 
 def main():
     runApp()

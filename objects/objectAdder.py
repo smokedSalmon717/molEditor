@@ -14,8 +14,17 @@ import objects.objects as objects
 def addObject(app, x, y):
     app.currentObject(app, x, y)
 
-def addBond(app):
+def addBond(app, x, y):
     order = app.bondOrder
+    if not app.parentAtom:
+        length = app.defaultBondLength /2
+        atom1, atom2 = addAtom(app, x - length, y), addAtom(app, x + length, y)
+        atom1.addBond(atom2)
+    else:
+        atom = addAtom(app, x, y)
+        app.parentAtom.addBond(atom)
+        
+        
 
 
 def newBondFromParent(app, parent, child):

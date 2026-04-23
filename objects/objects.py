@@ -20,7 +20,7 @@ class Atom:
     } #this is used for coloring of each element
 
 
-    def __init__(self, element='C', parent=None, position=None, id=0):
+    def __init__(self, element, parent=None, position=None, id=0):
         self.element = element #atomic symbol
         self.pos = position
         self.hydrogenCount = Atom.valencyDict[element] #used so if u just add carbon, 4 hydrogen gets added, and 3 for O, and etc
@@ -44,7 +44,7 @@ class Atom:
         for i in range(valency):
             hydrogen = ImplicitHydrogen(self)
             self.addBond(hydrogen)
-            
+
         
 
 
