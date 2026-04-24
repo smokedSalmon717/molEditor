@@ -4,7 +4,7 @@
 #drawWhiteboard function
 from objects.objects import Atom, Molecule, Bond
 from cmu_graphics import *
-from buttons.buttons import Button, drawingButton
+from buttons.buttons import drawingButton, actionButton, selectionButton
 import buttons.functions 
 import draw
 import utils
@@ -19,7 +19,10 @@ from pathlib import Path
 
 
 
+
 def onAppStart(app):
+    app.moleculeName = None
+    app.status = None # REMOVE
     app.saveList = []
     app.inspectorEnabled = False
     app.atoms = []
@@ -28,7 +31,7 @@ def onAppStart(app):
     app.molecules = []
     saveState(app)
     initAppStates(app)
-    app.basePath = str(Path(__file__).resolve().parent) + '/images/'
+
     initConfigVariables(app)
     makeButtons(app)
 
@@ -61,10 +64,13 @@ def makeButtons(app):
     app.currElement = 'C'
 
     #Other functions
-    app.buttons.append(Button(app.width/2,0, size, size, buttons.functions.cleanStructure, app))
-    app.buttons.append(Button(app.width/2 + size, 0, size, size, buttons.functions.delete, app))
+    app.buttons.append(actionButton(app.width/2,0, size, size, buttons.functions.cleanStructure, app))
+    app.buttons.append(actionButton(app.width/2 + size, 0, size, size, buttons.functions.deleteAll, app))
+    app.buttons.append(actionButton(app.width/2 - size, 0, size, size, buttons.functions.smiles, app))
+    app.buttons.append(selectionButton(app.width/2 + 2*size,0, size, size, buttons.functions.boxSelect, app))
 
 
+        
 
 
 def generateSave(app):
@@ -103,51 +109,53 @@ def generateSave(app):
         save['bonds'].append(bondData)
 
     for atom in app.atoms:
-       atom.updateHydrogens(app)
+        atom.updateHydrogens(app)
 
     return save
 
 def saveState(app):
     save = generateSave(app)
     app.saveList.append(save)
-    if len(app.saveList) > 20:
+    if len(app.saveList) > 5:
         app.saveList.pop(0)
+    app.status = save
 
 def loadState(app):
         save = app.saveList[-1]
+
         app.atoms.clear()
         app.bonds.clear()
         app.molecules.clear()
         
         # This is our magic translation book: { Old_ID : New_Atom_Object }
         atomIDMap = {}
-        
         for atomData in save['atoms']:
             # Note: you might need to adjust your Atom __init__ to accept raw data 
             # without triggering your auto-molecule or auto-hydrogen functions here
-            newAtom = Atom(app, element=atomData['element'], position=atomData['pos'])
+            newAtom = Atom(app, element=atomData['element'], position=atomData['pos'], hydrogenUpdate = False)
             newAtom.id = atomData['id'] # Force the ID to match the save file
-    
-            app.atoms.append(newAtom)
             atomIDMap[newAtom.id] =newAtom
-        
         for bondData in save['bonds']:
 
             atom1, atom2 = atomIDMap[bondData['atom1']], atomIDMap[bondData['atom2']]
             order = bondData['order']
             newBond = Bond(app, atom1, atom2, order)
-            app.bonds.append(newBond)
             atom1.bonds.append(newBond)
             atom2.bonds.append(newBond)
 
+
         if app.saveList:
             app.saveList.pop()
+        for atom in app.atoms:
+            if atom.element != 'H':
+                atom.updateHydrogens(app)
 
 
 
   
 
 def initConfigVariables(app): 
+    app.basePath = str(Path(__file__).resolve().parent) + '/images/'
     with open("config.json") as f:
         setting = json.load(f) 
     app.width = setting["width"]
@@ -176,11 +184,15 @@ def initAppStates(app):
 
 
 def onKeyPress(app, key, modifiers):
-    if (key == 'z') and ('control' in modifiers):
+    if (key == 'z') and ('control' in modifiers) and (len(app.saveList) > 0):
         loadState(app)
     
 def onStep(app):
+    
 
+
+
+    
     app.temp = len(app.molecules)
     app.moveAtomsMode = keyboard.is_pressed('shift') 
     #moveAtomsMode means that dragging atoms will move them and not make new atoms.                                                 
@@ -204,15 +216,14 @@ def onMouseMove(app, x, y):
 
 def onMousePress(app, x, y):
     utils.buttonCheck(app, x, y)
+
     if not app.moveAtomsMode:
         if app.selectedBond != None:
             app.selectedBond.checkClick(x, y)
         elif not (app.inside):
             if not app.parentAtom:
-                #if app.selectedAtomList == []: #dont add atom if your doing box selection
                 objectAdder.addObject(app, x, y)
-                #else:
-                #  app.selectedAtomList = []
+
             else:
                 if app.stepCounterForDoubleClick != None:
                     app.selectedAtomList.append(app.parentAtom) 
@@ -269,12 +280,8 @@ def onMouseRelease(app, x, y):
 def redrawAll(app):
     draw.drawSketchpad(app)
     draw.drawButtons(app)
-    drawStatus(app)
-   
-
-def drawStatus(app):
-    drawLabel(f'{len(app.saveList)}', app.width/2, 200)
-
+    if app.moleculeName:
+        drawLabel(f'{app.moleculeName}', 100, 100)
 
 
 def main():

@@ -23,42 +23,26 @@ def addBondFunction(app, x, y):
         atom2 = Atom(app, 'C', parent=atom1, position=(x-app.defaultBondLength/2, y))
 
 def addBond(app, atom1, atom2, order = None):
-    if order == None:
-        order = app.bondOrder
-    Bond(app,atom1, atom2, order)
+    if atom1 != atom2:
+        if order == None:
+            order = app.bondOrder
+        Bond(app,atom1, atom2, order)
+    if (atom1.element != 'H') and (atom2.element != 'H'):
+        atom1.updateHydrogens(app)
+        atom2.updateHydrogens(app)
+
 
 
 
 def addAtom(app , x, y):
-    Atom(app, app.currElement, parent = app.parentAtom, position=(x,y))
+    if not utils.isWithinAtom(app, x, y):
+        Atom(app, app.currElement, parent = app.parentAtom, position=(x,y))
 
 
 
 
 
 
-
-
-    #     newAtom = addBond(app, x, y)
-    #     if app.parentAtom.molecule != None:
-    #         app.parentAtom.molecule.addAtom(newAtom)
-    #     else:
-    #         newMolecule = Molecule(app)
-    #         newMolecule.addAtom(newAtom)
-    #         newMolecule.addAtom(app.parentAtom)
-    
-    #     #vector = utils.makeVector(app.parentAtom.pos, (x,y))
-    #     #vector = utils.normalizeVector(*vector, app.defaultBondLength)
-    #     #x, y = utils.vectorSum(vector, app.parentAtom.pos)
-    #     #newAtom = objects.Atom(app.currElement, position=(x,y))
-    #     #newAtom.addBond(app.parentAtom, app.bondOrder)
-    # else:
-    #     newMolecule = Molecule(app)
-    #     newAtom = Atom(app, app.currElement, position=(x,y))
-    #     newAtom.molecule = newMolecule
-    #     app.molecules.append(newMolecule)
-    # app.atoms.append(newAtom)
-    # return newAtom
 
 def addRing(app, x, y): #size not used, just have it cuz of how I switched between which objectType I am adding
     n = app.ringNumber
@@ -68,13 +52,10 @@ def addRing(app, x, y): #size not used, just have it cuz of how I switched betwe
     else:
         vector = utils.makeVector(app.parentAtom.pos, (x,y)) #generates vector from parents to child
         vector = utils.normalizeVector(*vector, app.defaultBondLength)
-    seed = addAtom(app, x, y)
-    ring = Ring(seed, n, app.defaultBondLength, vector, aromatic = app.aromatic)
-    addRingToApp(app, ring)
+    seed = Atom(app, element='C', parent=app.parentAtom if app.parentAtom else None, position=(x, y), hydrogenUpdate= False)
+    ring = Ring(app, seed, ringNumber = n, startVector = vector)
 
-def addRingToApp(app, ring):
-    pass
-    #WORK ON RINGS LATER
+
     
     
     

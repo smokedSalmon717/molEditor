@@ -1,5 +1,5 @@
 import objects.objectAdder as objectAdder
-
+import pubchempy as pcp
 
 
 #This is done in this horrible way
@@ -84,9 +84,38 @@ def cleanStructure(app):
 
     return app.basePath + 'O.svg'
 
-def delete(app):
+def deleteAll(app):
     app.atoms = []
     app.bonds = []
     app.molecules = []
 
-    return app.basePath + 'H.svg'
+    return app.basePath + 'deleteAll.svg'
+
+def smiles(app):
+    passed = True
+    if app.molecules:
+        passed = False
+
+        moleculeSmiles = app.molecules[0].get_smiles()
+        try:
+            results= pcp.get_compounds(moleculeSmiles, 'smiles')
+            app.moleculeName = results[0].iupac_name
+            if app.moleculeName == 'hexa-1,3,5-triene':
+                app.moleculeName = 'benzene'
+            passed = True
+        
+        except: 
+            TypeError
+        
+    if not passed:
+        app.moleculeName = 'Failed'
+
+    return app.basePath + 'Cl.svg'
+
+
+
+
+def boxSelect(app):
+    app.boxSelection = True
+
+    return app.basePath + 'boxSelect.svg'

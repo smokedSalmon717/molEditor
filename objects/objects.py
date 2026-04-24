@@ -4,6 +4,7 @@ import utils
 from pathlib import Path
 from collections import deque
 import copy
+
 class Atom:
 
     IDMap = dict() #counts number of atoms for each element for
@@ -23,7 +24,7 @@ class Atom:
 
 
 
-    def __init__(self, app, element, parent = None, position=None):
+    def __init__(self, app, element, parent = None, position=None, hydrogenUpdate = True):
         self.app = app
         self.element = element #atomic symbol
         self.pos = position
@@ -36,12 +37,13 @@ class Atom:
         self.addID()  #find the unique id identifier, so you can tell different atoms appart
         self.ID = str(self)
         self.addAIVariables() #Instead of changing my code to work with AI code, Im giving atom new properties that fit with how AI thinks atom work
-        self.addBond(parent, app.bondOrder)
+        self.addBond(parent, 1 if self.element == 'H' else app.bondOrder)
         self.app.atoms.append(self)
         
         self.connectToMolecule()
-        self.updateHydrogens(self.app)
-        if self.parent and self.parent.element != 'H' and self.element != 'H':
+        if self.element != 'H' and hydrogenUpdate:
+            self.updateHydrogens(self.app)
+        if self.parent and self.parent.element != 'H' and self.element != 'H' and hydrogenUpdate:
             self.parent.updateHydrogens(self.app)
 
     def connectToMolecule(self):
@@ -257,28 +259,40 @@ class Bond:
 
 
 class Ring: 
-    def __init__(self, seedAtom, n, bondLength, vector, aromatic = False): 
-        self.bondOrder = 1
-        self.aromatic = aromatic
-        self.atoms = [seedAtom]
-        self.n = n
-        self.pos = seedAtom.pos
-        self.angle = - math.tau / n #the angle you rotate by each time. The ring generation is like a turtle
-        self.bondLength = bondLength
-        self.vector = utils.rotateVector(vector, 0.5*(math.pi + self.angle)) 
+    def __init__(self, app, seed, ringNumber, startVector):
+        app.bondOrder = 1
+        self.app = app
+        self.aromatic = app.aromatic
+        self.atoms = [seed]
+        self.n = ringNumber
+        self.pos = seed.pos
+        self.angle = - math.tau / self.n #the angle you rotate by each time. The ring generation is like a turtle
+        self.bondLength = app.defaultBondLength
+        self.vector = utils.rotateVector(startVector, 0.5*(math.pi + self.angle)) 
         #the angle I rotated by is to align the vector with the polygon
         self.generateRing()
+        app.bondOrder = 1
+
 
     def generateRing(self):
         for _ in range(self.n - 1):
             if self.aromatic:             #If aromatic, you want alternating double bond single bonds (not literally putting in aromaticity)
-                self.bondOrder = (self.bondOrder % 2) + 1 
+                self.app.bondOrder = (self.app.bondOrder % 2) + 1 
             self.pos = utils.vectorSum(self.vector, self.pos)
             self.vector = utils.rotateVector(self.vector, self.angle)
-            newAtom = Atom('C', parent = self.atoms[-1], position = self.pos)
-            newAtom.addBond(self.atoms[-1], order = self.bondOrder )#add bond with previous
+            newAtom = Atom(self.app, element='C', parent = self.atoms[-1], position = self.pos, hydrogenUpdate=False)
             self.atoms.append(newAtom)
-        self.atoms[-1].addBond(self.atoms[0], order= 1)
+
+        
+        self.atoms[0].addBond(self.atoms[-1], order =1)
+        
+        #Bond(self.app, self.atoms[0], self.atoms[-1], order = 1)
+        
+
+
+
+
+
 
 
     def __repr__(self):
@@ -290,29 +304,6 @@ class Ring:
     def __hash__(self):
         return hash(str(self))
 
-# class Molecule: #Bad, not needed
-#     def __init__(self, atoms):
-#         self.atoms = atoms
-#         self.addedBonds = []
-#         self.structure = {atoms[0] : self.generateStructureDict([None, atoms[0]])}
-
-
-#     def generateStructureDict(self, parentAtomChain):
-#         currAtom = parentAtomChain[-1]
-#         prevAtom = parentAtomChain[-2]
-#         res = dict()
-#         for atom in currAtom.bonds.keys():
-#             if not (atom in parentAtomChain): 
-#                 next = self.generateStructureDict(parentAtomChain + [atom])
-#                 res[atom] = next
-        
-#         return res
-    
-#     def addImplicitHydrogen(self, app, tree):
-#         for parent in tree:
-#             if parent.element == 'H':
-#                 continue
-#             initialValence = Atom.valencyDict[parent.element]
 
 #-----------------------------
 #MOLECULE FUNCTION 90% WRITTEN BY AI
@@ -424,3 +415,103 @@ class Molecule:
     def beautify(self):
         self.clean_2d_coordinates()
         self.relativeCoordsToRealCoords()
+
+
+    #Get smiles function written by AI
+    def get_smiles(self):
+            """
+            Generates a non-canonical SMILES string for the molecule via Depth-First Search.
+            Explicit hydrogens are ignored as SMILES calculates them implicitly.
+            """
+            # 1. Filter out explicit Hydrogens (SMILES assumes standard valency)
+            heavy_atoms = [atom for atom in self.atoms if atom.element != 'H']
+            
+            if not heavy_atoms:
+                return ""
+
+            # 2. Find a logical starting point (ideally an atom with only 1 heavy neighbor)
+            def get_heavy_degree(atom):
+                count = 0
+                for bond in atom.bonds:
+                    for neighbor in bond.atoms:
+                        if neighbor != atom and neighbor.element != 'H':
+                            count += 1
+                return count
+
+            start_atom = min(heavy_atoms, key=get_heavy_degree)
+
+            # 3. Setup traversal state
+            visited = set()
+            ring_closures = {} # Tracks (atom1, atom2) -> ring_number
+            ring_number = 1
+
+            def dfs(current_atom, incoming_bond=None):
+                nonlocal ring_number
+                visited.add(current_atom)
+                
+                smiles_chunk = ""
+
+                # A. Process the incoming bond order
+                if incoming_bond:
+                    if incoming_bond.order == 2:
+                        smiles_chunk += "="
+                    elif incoming_bond.order == 3:
+                        smiles_chunk += "#"
+
+                # B. Add the current element symbol
+                smiles_chunk += current_atom.element
+
+                # C. Find valid neighbors (heavy atoms we didn't just come from)
+                neighbors_info = []
+                for bond in current_atom.bonds:
+                    if bond == incoming_bond: 
+                        continue # Don't backtrack
+                        
+                    for neighbor in bond.atoms:
+                        if neighbor != current_atom and neighbor.element != 'H':
+                            neighbors_info.append((neighbor, bond))
+
+                # D. Separate into rings (already visited) and branches (unvisited)
+                unvisited_branches = []
+                
+                for neighbor, bond in neighbors_info:
+                    if neighbor in visited:
+                        # Ring closure detected!
+                        # Create a unique, order-independent key for this pair
+                        closure_pair = frozenset([current_atom, neighbor])
+                        
+                        if closure_pair not in ring_closures:
+                            # First time seeing this ring bond, assign a number
+                            ring_closures[closure_pair] = ring_number
+                            smiles_chunk += str(ring_number)
+                            ring_number += 1
+                            if ring_number > 9: # Simple safeguard for standard parsing
+                                ring_number = 1
+                        else:
+                            # This is the back-half of the ring closure
+                            smiles_chunk += str(ring_closures[closure_pair])
+                    else:
+                        unvisited_branches.append((neighbor, bond))
+
+                # E. Process unvisited branches
+                for i, (neighbor, bond) in enumerate(unvisited_branches):
+                    is_last = (i == len(unvisited_branches) - 1)
+                    
+                    # Recursively get the SMILES for the branch
+                    branch_smiles = dfs(neighbor, bond)
+                    
+                    if not is_last:
+                        # If it's not the last branch, wrap it in parentheses
+                        smiles_chunk += f"({branch_smiles})"
+                    else:
+                        # The last branch just continues the main chain
+                        smiles_chunk += branch_smiles
+
+                return smiles_chunk
+
+            # Run the recursive algorithm
+            return dfs(start_atom)
+
+                    
+
+
