@@ -12,7 +12,6 @@ import keyboard
 import json
 import objects.objectAdder as objectAdder
 from pathlib import Path
-import copy
 
 
 
@@ -104,7 +103,7 @@ def generateSave(app):
         save['bonds'].append(bondData)
 
     for atom in app.atoms:
-        atom.updateHydrogens(app)
+       atom.updateHydrogens(app)
 
     return save
 
@@ -205,22 +204,23 @@ def onMouseMove(app, x, y):
 
 def onMousePress(app, x, y):
     utils.buttonCheck(app, x, y)
-    if app.selectedBond != None:
-        app.selectedBond.checkClick(x, y)
-    if not (app.inside or app.selectedBond):
-        if not app.parentAtom:
-            #if app.selectedAtomList == []: #dont add atom if your doing box selection
-            objectAdder.addObject(app, x, y)
-            #else:
-              #  app.selectedAtomList = []
-        else:
-            if app.stepCounterForDoubleClick != None:
-                app.selectedAtomList.append(app.parentAtom) 
-                #abuse of notation, not literally parent atom, just atom being hovered over
+    if not app.moveAtomsMode:
+        if app.selectedBond != None:
+            app.selectedBond.checkClick(x, y)
+        elif not (app.inside):
+            if not app.parentAtom:
+                #if app.selectedAtomList == []: #dont add atom if your doing box selection
+                objectAdder.addObject(app, x, y)
+                #else:
+                #  app.selectedAtomList = []
             else:
-                app.stepCounterForDoubleClick = 10
-                #Time for double clicks to work. Rn its 0.5 seconds
-    
+                if app.stepCounterForDoubleClick != None:
+                    app.selectedAtomList.append(app.parentAtom) 
+                    #abuse of notation, not literally parent atom, just atom being hovered over
+                else:
+                    app.stepCounterForDoubleClick = 10
+                    #Time for double clicks to work. Rn its 0.5 seconds
+        
 
 
             
