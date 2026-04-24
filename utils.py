@@ -23,15 +23,16 @@ def makePointDiscreteAngle(uniqueAngles, x0, y0, x1, y1):
 
 def deleteSelectedAtoms(app):
     for atom in app.selectedAtomList:
-        deleteBondReferencesInOtherAtoms(atom)
         app.atoms.remove(atom)
+        for bond in atom.bonds:
+            app.bonds.remove(bond)
+            for entry in bond.atoms:
+                entry.bonds.remove(bond)
+
 
     app.selectedAtomList = [] 
 
 
-def deleteBondReferencesInOtherAtoms(self):
-    for partner in self.bonds:
-        partner.bonds.pop(self)
 
 def moveGroup(group, dx, dy):
     #take in list of atoms as group, and moves them by dx, dy
@@ -164,8 +165,14 @@ def rotateVector(vector, angle):
 
     return (xNew, yNew)
 
+def selectAtomsInsideTheBox(app):
+    app.selectedAtomList = []
+    x1, y1, x2, y2 = app.box
+    for atom in app.atoms:
+        if (x1 <= atom.pos[0] <= x2) and (y1 <= atom.pos[1] <= y2):
+            app.selectedAtomList.append(atom)
 
-#These really should be in seperate files
+
 
 def buttonCheck(app, x, y):
     for button in app.buttons:

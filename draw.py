@@ -14,6 +14,21 @@ def drawSelection(app):
         angle = 90 - math.degrees(math.atan2(x1-x2,y1-y2))
         width = distance(x1, y1, x2, y2)
         drawOval(cx, cy, width, 20, rotateAngle=angle, fill='yellow', opacity=25)
+
+
+def drawBox(app):
+    if app.box:
+        x1, y1, x2, y2= app.box
+        w= abs(x2 - x1)
+        h = abs(y2 - y1)
+        x = min(x2, x1)
+        y = min(y2, y1)
+        if w <= 0:
+            w =1
+        if h <= 0:
+            h = 1
+
+        drawRect(x, y, w, h, fill=rgb(150,150,250), opacity= 40, border='blue', dashes=True)
         
 def drawAtoms(app):
     for atom in app.atoms:
@@ -50,9 +65,11 @@ def drawTempBond(app):
 
 def drawSketchpad(app):
     drawSelection(app)
+
     drawAtoms(app)
     drawBonds(app)
     drawTempBond(app)
+    drawBox(app)
 
 
 

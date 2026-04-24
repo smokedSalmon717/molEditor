@@ -22,7 +22,8 @@ from pathlib import Path
 
 def onAppStart(app):
     app.moleculeName = None
-    app.status = None # REMOVE
+    app.boxSelect = False
+    app.box = None
     app.saveList = []
     app.inspectorEnabled = False
     app.atoms = []
@@ -34,6 +35,7 @@ def onAppStart(app):
 
     initConfigVariables(app)
     makeButtons(app)
+    app.boxSelect = False
 
 
 
@@ -186,6 +188,8 @@ def initAppStates(app):
 def onKeyPress(app, key, modifiers):
     if (key == 'z') and ('control' in modifiers) and (len(app.saveList) > 0):
         loadState(app)
+    if key == 'backspace':
+        utils.deleteSelectedAtoms(app)
     
 def onStep(app):
     
@@ -216,8 +220,10 @@ def onMouseMove(app, x, y):
 
 def onMousePress(app, x, y):
     utils.buttonCheck(app, x, y)
-
-    if not app.moveAtomsMode:
+    if app.box == None and app.boxSelect:
+        app.box = [x,y,x,y]
+    
+    elif not app.moveAtomsMode:
         if app.selectedBond != None:
             app.selectedBond.checkClick(x, y)
         elif not (app.inside):
@@ -236,7 +242,14 @@ def onMousePress(app, x, y):
 
             
 def onMouseDrag(app, x, y):
-    if app.parentAtom:
+    if app.boxSelect:
+
+        if app.box == None:
+            app.box = [x, y, x, y]
+        else:
+            app.box = [app.box[0], app.box[1], x, y]
+
+    elif app.parentAtom:
         if app.moveAtomsMode:
             if app.parentAtom in app.selectedAtomList:
                 x0, y0 = app.parentAtom.pos
@@ -250,7 +263,10 @@ def onMouseDrag(app, x, y):
    
 def onMouseRelease(app, x, y):
     saveState(app)
-    if app.parentAtom and not utils.insideAButton(app, x, y) and app.tempAtomPos:
+    if app.boxSelect:
+        utils.selectAtomsInsideTheBox(app)
+        app.box = None
+    elif app.parentAtom and not utils.insideAButton(app, x, y) and app.tempAtomPos:
         if utils.isWithinAtom(app, x, y):
             atom1, atom2 = app.parentAtom, utils.isWithinAtom(app, x, y)
             objectAdder.addBond(app, atom1, atom2, order = app.bondOrder)
@@ -261,27 +277,13 @@ def onMouseRelease(app, x, y):
 
 
 
-    # if app.tempAtomPos and app.parentAtom and not utils.insideAButton(app, x, y): #this is exterior since want nothing to happen if this fails
-    #     if not utils.isWithinAtom(app, x, y):
-    #         objectAdder.addObject(app, x, y)
-    #     else:
-    #         otherAtom = utils.isWithinAtom(app, x, y)
-    #         print(otherAtom)
-    #         Atom(app, app.currElement, otherAtom, position= (x,y))
-
-    #     app.parentAtom = None # This is so that the parentAtom is not desynced with position, which can  have weird results
-
-
-    # #------------- reseting vars
-    # app.tempAtomPos = None 
-    
 
            
 def redrawAll(app):
     draw.drawSketchpad(app)
     draw.drawButtons(app)
-    if app.moleculeName:
-        drawLabel(f'{app.moleculeName}', 100, 100)
+    #if app.moleculeName:
+    drawLabel(f'{app.moleculeName}', 100, 100)
 
 
 def main():

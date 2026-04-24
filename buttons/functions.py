@@ -82,7 +82,7 @@ def cleanStructure(app):
             molecule.beautify()
 
 
-    return app.basePath + 'O.svg'
+    return app.basePath + 'clean.svg'
 
 def deleteAll(app):
     app.atoms = []
@@ -110,12 +110,12 @@ def smiles(app):
     if not passed:
         app.moleculeName = 'Failed'
 
-    return app.basePath + 'Cl.svg'
+    return app.basePath + 'info.png'
 
 
 
 
 def boxSelect(app):
-    app.boxSelection = True
+    app.boxSelect = not app.boxSelect
 
     return app.basePath + 'boxSelect.svg'
