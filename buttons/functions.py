@@ -14,21 +14,21 @@ def showHydrogen(app):
 
 def singleBond(app):
     app.bondOrder = 1
-    app.currentObject = objectAdder.addBond
+    app.currentObject = objectAdder.addBondFunction
     return app.basePath + 'single.svg'
 
 
 
 def doubleBond(app):
     app.bondOrder = 2
-    app.currentObjetc = objectAdder.addBond
+    app.currentObjetc = objectAdder.addBondFunction
     return app.basePath + 'double.svg'
 
 
 
 def tripleBond(app):
     app.bondOrder = 3
-    app.currentObject = objectAdder.addBond
+    app.currentObject = objectAdder.addBondFunction
     return app.basePath + 'triple.svg'
 
 def benzene(app):
@@ -76,4 +76,17 @@ def chlorine(app):
     app.currentObject = objectAdder.addAtom
     return app.basePath + 'Cl.svg'
 
+def cleanStructure(app):
+    if app.molecules:
+        for molecule in app.molecules:
+            molecule.beautify()
 
+
+    return app.basePath + 'O.svg'
+
+def delete(app):
+    app.atoms = []
+    app.bonds = []
+    app.molecules = []
+
+    return app.basePath + 'H.svg'

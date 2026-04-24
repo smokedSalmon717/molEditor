@@ -1,7 +1,7 @@
 #This file is for functions which are specific to my application
 #utils.py is for generic utils, stuff like vector math
 import utils
-from objects.objects import Atom, Bond, Ring
+from objects.objects import Atom, Bond, Ring, Molecule
  
 
 
@@ -14,42 +14,51 @@ from objects.objects import Atom, Bond, Ring
 def addObject(app, x, y):
     app.currentObject(app, x, y)
 
-def addBond(app, x, y):
-    order = app.bondOrder
-    if not app.parentAtom:
-        length = app.defaultBondLength /2
-        atom1, atom2 = addAtom(app, x - length, y), addAtom(app, x + length, y)
-        app.parentAtom = atom1
+
+def addBondFunction(app, x, y):
+    if app.parentAtom:
+        Atom(app, app.currElement, parent=app.parentAtom, position = app.tempAtomPos)
     else:
-        atom2 = Atom(app.currElement, position=(x,y))
-        app.atoms.append(atom2)
-        atom1 = app.parentAtom
-    atom1.addBond(atom2)
-    app.bonds.append(Bond(atom1, atom2, order))
-    return atom2
+        atom1 = Atom(app, 'C', position=(x + app.defaultBondLength/2, y))
+        atom2 = Atom(app, 'C', parent=atom1, position=(x-app.defaultBondLength/2, y))
 
-        
-        
+def addBond(app, atom1, atom2, order = None):
+    if order == None:
+        order = app.bondOrder
+    Bond(app,atom1, atom2, order)
 
 
-def newBondFromParent(app, parent, child):
-    pass
-
-def totallyNewBond(app, x, y):
-    pass
 
 def addAtom(app , x, y):
-    if app.parentAtom:
-        return addBond(app, x, y)
-        #vector = utils.makeVector(app.parentAtom.pos, (x,y))
-        #vector = utils.normalizeVector(*vector, app.defaultBondLength)
-        #x, y = utils.vectorSum(vector, app.parentAtom.pos)
-        #newAtom = objects.Atom(app.currElement, position=(x,y))
-        #newAtom.addBond(app.parentAtom, app.bondOrder)
-    else:
-        newAtom = Atom(app.currElement, position=(x,y))
-    app.atoms.append(newAtom)
-    return newAtom
+    Atom(app, app.currElement, parent = app.parentAtom, position=(x,y))
+
+
+
+
+
+
+
+
+    #     newAtom = addBond(app, x, y)
+    #     if app.parentAtom.molecule != None:
+    #         app.parentAtom.molecule.addAtom(newAtom)
+    #     else:
+    #         newMolecule = Molecule(app)
+    #         newMolecule.addAtom(newAtom)
+    #         newMolecule.addAtom(app.parentAtom)
+    
+    #     #vector = utils.makeVector(app.parentAtom.pos, (x,y))
+    #     #vector = utils.normalizeVector(*vector, app.defaultBondLength)
+    #     #x, y = utils.vectorSum(vector, app.parentAtom.pos)
+    #     #newAtom = objects.Atom(app.currElement, position=(x,y))
+    #     #newAtom.addBond(app.parentAtom, app.bondOrder)
+    # else:
+    #     newMolecule = Molecule(app)
+    #     newAtom = Atom(app, app.currElement, position=(x,y))
+    #     newAtom.molecule = newMolecule
+    #     app.molecules.append(newMolecule)
+    # app.atoms.append(newAtom)
+    # return newAtom
 
 def addRing(app, x, y): #size not used, just have it cuz of how I switched between which objectType I am adding
     n = app.ringNumber
@@ -64,11 +73,8 @@ def addRing(app, x, y): #size not used, just have it cuz of how I switched betwe
     addRingToApp(app, ring)
 
 def addRingToApp(app, ring):
-    print(ring.atoms)
-    for i in range(len(ring.atoms)):
-        app.atoms.append(ring.atoms[i])
-        atom1, atom2 = ring.atoms[i], ring.atoms[(i + 1) % len(ring.atoms)]
-        app.bonds.append(Bond(atom1, atom2, order = atom1.bonds[atom2]))
+    pass
+    #WORK ON RINGS LATER
     
     
     

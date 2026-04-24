@@ -28,7 +28,8 @@ class Button:
 
         
     def onClick(self):
-        pass
+        self.callback(self.app)
+
 
 class drawingButton(Button):
     def checkIfActive(self):

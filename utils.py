@@ -24,7 +24,8 @@ def makePointDiscreteAngle(uniqueAngles, x0, y0, x1, y1):
 def deleteSelectedAtoms(app):
     for atom in app.selectedAtomList:
         deleteBondReferencesInOtherAtoms(atom)
-        app.atoms.remove(atom) 
+        app.atoms.remove(atom)
+
     app.selectedAtomList = [] 
 
 
@@ -86,6 +87,70 @@ def makeVector(p1, p0):
     x1, y1 = p1
     return (x0 - x1, y0 - y1)
 
+# AI WRITTEN, GEMINI
+def calculate_optimized_hydrogen_angles(existing_angles, h_needed):
+    """
+    Calculates the best angles to place new hydrogens to maximize repulsion.
+    All angles are assumed to be in radians.
+    """
+    if h_needed == 0:
+        return []
+
+    # Case 0: No existing bonds (isolated atom)
+    if not existing_angles:
+        # Distribute evenly starting from 0 radians
+        angle_step = (2 * math.pi) / h_needed
+        return [i * angle_step for i in range(h_needed)]
+
+    # Case 1: Exactly 1 existing bond
+    if len(existing_angles) == 1:
+        base_angle = existing_angles[0]
+        # Total bonds will be the 1 existing + the new hydrogens
+        total_bonds = h_needed + 1
+        if total_bonds > 0:
+            angle_step = (2 * math.pi) / total_bonds
+        else:
+            return []
+        # Step away from the base angle symmetrically
+        return [(base_angle + (i * angle_step)) % (2 * math.pi) for i in range(1, total_bonds)]
+
+    # Case 2+: Multiple existing bonds
+    # Normalize all angles to the range [0, 2pi) and sort them
+    sorted_angles = sorted([a % (2 * math.pi) for a in existing_angles])
+
+    max_gap = 0
+    best_start_angle = 0
+    num_angles = len(sorted_angles)
+
+    # Find the largest angular gap between adjacent bonds
+    for i in range(num_angles):
+        angle1 = sorted_angles[i]
+        angle2 = sorted_angles[(i + 1) % num_angles] # Modulo handles the wrap-around to index 0
+
+        # Calculate the gap, ensuring it wraps around 2*pi correctly
+        gap = (angle2 - angle1) % (2 * math.pi)
+        
+        # Fallback for perfectly overlapping bonds (0 gap becomes 2pi gap)
+        if gap <= 0:
+            gap += 2 * math.pi
+
+        if gap > max_gap:
+            max_gap = gap
+            best_start_angle = angle1
+
+    # Subdivide the largest gap evenly
+    # Example: If adding 1 H, we want it in the dead center (gap / 2)
+    # If adding 2 H's, we want them at 1/3 and 2/3 of the gap (gap / 3)
+    if h_needed <= -1:
+        h_needed = 0
+    angle_step = max_gap / (h_needed + 1)
+
+    new_angles = []
+    for i in range(1, h_needed + 1):
+        new_angle = (best_start_angle + (i * angle_step)) % (2 * math.pi)
+        new_angles.append(new_angle)
+
+    return new_angles
 
 #written by ChatGPT, though I changed the names to match my conventions
 #I  do understand the math, just didn't feel like figuring out the signs in our sign convention
@@ -122,7 +187,7 @@ def isWithinBond(app, x, y):
     for bond in app.bonds:
         if bond.isInside(x, y):
             return bond
-    return None
+    return None 
 
 
 
