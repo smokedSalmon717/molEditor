@@ -2,7 +2,7 @@
 #one of the ones built into cmu_graphics, do not include it in the file
 #even stuff like drawAtoms is inside a different file is gets called by the
 #drawWhiteboard function
-from objects.objects import Atom, Molecule
+from objects.objects import Atom, Molecule, Bond
 from cmu_graphics import *
 from buttons.buttons import Button, drawingButton
 import buttons.functions 
@@ -21,11 +21,13 @@ import copy
 
 
 def onAppStart(app):
+    app.saveList = []
     app.inspectorEnabled = False
     app.atoms = []
     app.bonds = []
     app.rings = []
     app.molecules = []
+    saveState(app)
     initAppStates(app)
     app.basePath = str(Path(__file__).resolve().parent) + '/images/'
     initConfigVariables(app)
@@ -66,6 +68,81 @@ def makeButtons(app):
 
 
 
+def generateSave(app):
+    save = {
+        'atoms':[],
+        'bonds':[]
+                }
+    i = 0
+    while i < len(app.atoms):
+        if app.atoms[i].element == 'H':
+            app.atoms.pop(i)
+        else:
+            i += 1
+    i = 0
+    while i < len(app.bonds):
+        bond = app.bonds[i]
+        if (bond.atoms[0].element == 'H') or (bond.atoms[1].element == 'H'):
+            app.bonds.pop(i)
+        else:
+            i += 1
+
+    for atom in app.atoms:
+        atomData = {
+                    'id':atom.id,
+                    'element':atom.element,
+                    'pos':atom.pos
+                    }
+        save['atoms'].append(atomData)
+
+    for bond in app.bonds:
+        bondData = {
+                    'atom1': bond.atoms[0].id,
+                    'atom2': bond.atoms[1].id,
+                    'order': bond.order
+                    }
+        save['bonds'].append(bondData)
+
+    for atom in app.atoms:
+        atom.updateHydrogens(app)
+
+    return save
+
+def saveState(app):
+    save = generateSave(app)
+    app.saveList.append(save)
+    if len(app.saveList) > 20:
+        app.saveList.pop(0)
+
+def loadState(app):
+        save = app.saveList[-1]
+        app.atoms.clear()
+        app.bonds.clear()
+        app.molecules.clear()
+        
+        # This is our magic translation book: { Old_ID : New_Atom_Object }
+        atomIDMap = {}
+        
+        for atomData in save['atoms']:
+            # Note: you might need to adjust your Atom __init__ to accept raw data 
+            # without triggering your auto-molecule or auto-hydrogen functions here
+            newAtom = Atom(app, element=atomData['element'], position=atomData['pos'])
+            newAtom.id = atomData['id'] # Force the ID to match the save file
+    
+            app.atoms.append(newAtom)
+            atomIDMap[newAtom.id] =newAtom
+        
+        for bondData in save['bonds']:
+
+            atom1, atom2 = atomIDMap[bondData['atom1']], atomIDMap[bondData['atom2']]
+            order = bondData['order']
+            newBond = Bond(app, atom1, atom2, order)
+            app.bonds.append(newBond)
+            atom1.bonds.append(newBond)
+            atom2.bonds.append(newBond)
+
+        if app.saveList:
+            app.saveList.pop()
 
 
 
@@ -99,7 +176,9 @@ def initAppStates(app):
 
 
 
-
+def onKeyPress(app, key, modifiers):
+    if (key == 'z') and ('control' in modifiers):
+        loadState(app)
     
 def onStep(app):
 
@@ -159,6 +238,7 @@ def onMouseDrag(app, x, y):
             app.tempAtomPos = utils.makePointDiscreteAngle(app.uniqueAngles ,*app.parentAtom.pos, x, y)
    
 def onMouseRelease(app, x, y):
+    saveState(app)
     if app.parentAtom and not utils.insideAButton(app, x, y) and app.tempAtomPos:
         if utils.isWithinAtom(app, x, y):
             atom1, atom2 = app.parentAtom, utils.isWithinAtom(app, x, y)
@@ -189,12 +269,11 @@ def onMouseRelease(app, x, y):
 def redrawAll(app):
     draw.drawSketchpad(app)
     draw.drawButtons(app)
-    #drawStatus(app)
+    drawStatus(app)
    
 
 def drawStatus(app):
-    pass
-    #drawLabel(f'{len(app.stateList)}', app.width/2, 200)
+    drawLabel(f'{len(app.saveList)}', app.width/2, 200)
 
 
 

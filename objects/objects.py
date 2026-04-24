@@ -34,6 +34,7 @@ class Atom:
         self.parent = parent
         self.bonds = []  #bonds are a dictionary, keys are the atomID, and values are the order of the bond
         self.addID()  #find the unique id identifier, so you can tell different atoms appart
+        self.ID = str(self)
         self.addAIVariables() #Instead of changing my code to work with AI code, Im giving atom new properties that fit with how AI thinks atom work
         self.addBond(parent, app.bondOrder)
         self.app.atoms.append(self)
@@ -174,6 +175,7 @@ class Atom:
     def addID(self):
         Atom.IDMap[self.element] = Atom.IDMap.get(self.element, 0) + 1
         self.idValue = Atom.IDMap[self.element]
+        self.id = self.element + str(self.idValue)
         
         
     def __repr__(self):
@@ -183,8 +185,6 @@ class Atom:
         return hash(str(self))
         
     
-    def id(self):
-        return str(self)
         
 
         
